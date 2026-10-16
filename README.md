@@ -123,6 +123,16 @@ Module 2 follows a 6-stage Human-Centered Design process:
 
 ---
 
+## ☁️ Live Cloud Deployment (1-Click Deploy to Render)
+
+Deploy CommonGround live on **Render** (Free tier Static Site) with a single click:
+
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/VANSHNDTECH/soul_society-)
+
+Clicking this button reads the [`render.yaml`](file:///e:/AICLUB/soul_society-/render.yaml) blueprint and automatically builds and deploys the entire application on Render's global CDN.
+
+---
+
 ## 🚀 Running the Application Locally
 
 ### Prerequisites
