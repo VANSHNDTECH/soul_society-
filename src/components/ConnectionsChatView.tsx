@@ -1,0 +1,387 @@
+import React, { useState, useRef, useEffect } from 'react';
+import { useApp } from '../context/AppContext';
+import {
+  MessageCircle,
+  Send,
+  MoreVertical,
+  ShieldCheck,
+  PauseCircle,
+  UserX,
+  ShieldAlert,
+  Sparkles,
+  Clock,
+  Compass,
+  Smile,
+  CheckCheck,
+} from 'lucide-react';
+import { calculateCompatibility } from '../utils/compatibility';
+
+export const ConnectionsChatView: React.FC = () => {
+  const {
+    currentUser,
+    allUsers,
+    connections,
+    activeConnectionId,
+    setActiveConnectionId,
+    messages,
+    sendMessage,
+    pauseConnection,
+    disconnectConnection,
+    setReportTargetUser,
+    blockUser,
+    setActiveTab,
+  } = useApp();
+
+  const [inputVal, setInputVal] = useState('');
+  const [showMenu, setShowMenu] = useState(false);
+  const [isTyping, setIsTyping] = useState(false);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Active connections where currentUser is a participant and status is not blocked
+  const myConnections = connections.filter(
+    c => c.userIds.includes(currentUser.id) && c.status !== 'blocked'
+  );
+
+  const currentConnection = myConnections.find(c => c.id === activeConnectionId) || myConnections[0];
+
+  const otherUserId = currentConnection?.userIds.find(id => id !== currentUser.id);
+  const otherUser = allUsers.find(u => u.id === otherUserId);
+
+  const currentMessages = currentConnection ? messages[currentConnection.id] || [] : [];
+
+  const comp = otherUser ? calculateCompatibility(currentUser, otherUser) : null;
+
+  // Auto-scroll to bottom of messages
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [currentMessages, isTyping]);
+
+  const handleSend = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!inputVal.trim() || !currentConnection) return;
+
+    sendMessage(currentConnection.id, inputVal.trim());
+    setInputVal('');
+
+    // Trigger typing simulation
+    setIsTyping(true);
+    setTimeout(() => {
+      setIsTyping(false);
+    }, 1800);
+  };
+
+  const handleQuickPrompt = (promptText: string) => {
+    if (!currentConnection) return;
+    sendMessage(currentConnection.id, promptText);
+    setIsTyping(true);
+    setTimeout(() => {
+      setIsTyping(false);
+    }, 1800);
+  };
+
+  if (myConnections.length === 0) {
+    return (
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 py-12 text-left">
+        <div className="bg-white rounded-3xl border border-dashed border-stone-300 p-12 text-center space-y-4 shadow-sm">
+          <div className="w-14 h-14 rounded-2xl bg-teal-50 text-teal-700 flex items-center justify-center mx-auto">
+            <MessageCircle className="w-7 h-7" />
+          </div>
+          <h2 className="text-xl font-bold text-stone-900">No Active Connections Yet</h2>
+          <p className="text-sm text-stone-500 max-w-md mx-auto leading-relaxed">
+            CommonGround is consent-first: conversations only open when both people mutually agree. Check your pending invitations or explore new compatible people!
+          </p>
+          <div className="flex justify-center gap-3 pt-2">
+            <button
+              onClick={() => setActiveTab('requests')}
+              className="px-5 py-2.5 bg-stone-900 text-white rounded-xl text-xs font-semibold hover:bg-stone-800 transition-colors"
+            >
+              Check Introductions
+            </button>
+            <button
+              onClick={() => setActiveTab('discovery')}
+              className="px-5 py-2.5 bg-stone-100 text-stone-800 rounded-xl text-xs font-semibold hover:bg-stone-200 transition-colors"
+            >
+              Browse Discovery
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 text-left">
+      <div className="bg-white rounded-3xl border border-stone-200 shadow-sm overflow-hidden grid lg:grid-cols-12 min-h-[640px]">
+        {/* Left Sidebar: Connections List */}
+        <div className="lg:col-span-4 border-r border-stone-200 flex flex-col bg-stone-50/50">
+          <div className="p-4 border-b border-stone-200 flex items-center justify-between">
+            <h2 className="font-bold text-sm text-stone-900 flex items-center gap-2">
+              <MessageCircle className="w-4 h-4 text-teal-700" />
+              <span>Active Connections ({myConnections.length})</span>
+            </h2>
+            <span className="text-[10px] bg-teal-100 text-teal-800 font-bold px-2 py-0.5 rounded-full">
+              Mutual Only
+            </span>
+          </div>
+
+          <div className="flex-1 overflow-y-auto divide-y divide-stone-100">
+            {myConnections.map(conn => {
+              const partnerId = conn.userIds.find(id => id !== currentUser.id);
+              const partner = allUsers.find(u => u.id === partnerId);
+              if (!partner) return null;
+
+              const isSelected = conn.id === currentConnection?.id;
+              const connMsgs = messages[conn.id] || [];
+              const lastMsg = connMsgs[connMsgs.length - 1];
+
+              return (
+                <button
+                  key={conn.id}
+                  onClick={() => {
+                    setActiveConnectionId(conn.id);
+                    setShowMenu(false);
+                  }}
+                  className={`w-full p-4 flex items-start gap-3 text-left transition-all ${
+                    isSelected
+                      ? 'bg-white border-l-4 border-l-teal-600 shadow-2xs'
+                      : 'hover:bg-stone-100/70'
+                  }`}
+                >
+                  <div className="relative shrink-0">
+                    <img
+                      src={partner.avatar}
+                      alt={partner.name}
+                      className="w-12 h-12 rounded-xl object-cover"
+                    />
+                    {conn.status === 'paused' ? (
+                      <span className="absolute -bottom-1 -right-1 w-3.5 h-3.5 bg-amber-500 rounded-full border-2 border-white" title="Paused" />
+                    ) : (
+                      <span className="absolute -bottom-1 -right-1 w-3.5 h-3.5 bg-emerald-500 rounded-full border-2 border-white" title="Active" />
+                    )}
+                  </div>
+
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between">
+                      <h4 className="font-bold text-xs text-stone-900 truncate">
+                        {partner.name}
+                      </h4>
+                      <span className="text-[10px] text-stone-400 shrink-0">
+                        {lastMsg ? lastMsg.timestamp.split(',')[0] : 'Just now'}
+                      </span>
+                    </div>
+
+                    <p className="text-[11px] text-teal-800 font-medium truncate mt-0.5">
+                      {conn.sharedInterests[0] || partner.interests[0]}
+                    </p>
+
+                    <p className="text-xs text-stone-500 truncate mt-1">
+                      {lastMsg ? lastMsg.text : 'Conversation unlocked'}
+                    </p>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Right Main Pane: Chat Window */}
+        <div className="lg:col-span-8 flex flex-col justify-between bg-white h-[640px]">
+          {otherUser && currentConnection ? (
+            <>
+              {/* Chat Header */}
+              <div className="p-4 border-b border-stone-200 flex items-center justify-between bg-stone-50/70">
+                <div className="flex items-center gap-3">
+                  <img
+                    src={otherUser.avatar}
+                    alt={otherUser.name}
+                    className="w-10 h-10 rounded-xl object-cover ring-1 ring-stone-200"
+                  />
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <h3 className="font-bold text-sm text-stone-900">{otherUser.name}</h3>
+                      {otherUser.pronouns && (
+                        <span className="text-xs text-stone-400">({otherUser.pronouns})</span>
+                      )}
+                      {currentConnection.status === 'paused' && (
+                        <span className="text-[10px] font-semibold bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full">
+                          Paused
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-[11px] text-stone-500">
+                      Pace: {otherUser.communicationPreferences.pace} • {comp?.totalScore}% Common Ground
+                    </p>
+                  </div>
+                </div>
+
+                {/* Safety Actions Dropdown */}
+                <div className="relative">
+                  <button
+                    onClick={() => setShowMenu(!showMenu)}
+                    className="p-2 text-stone-500 hover:text-stone-900 rounded-lg hover:bg-stone-200 transition-colors"
+                  >
+                    <MoreVertical className="w-5 h-5" />
+                  </button>
+
+                  {showMenu && (
+                    <div className="absolute right-0 mt-2 w-56 bg-white rounded-2xl shadow-xl border border-stone-200 py-1.5 z-20 animate-in fade-in zoom-in-95">
+                      <button
+                        onClick={() => {
+                          pauseConnection(currentConnection.id);
+                          setShowMenu(false);
+                        }}
+                        className="w-full px-4 py-2 text-left text-xs text-stone-700 hover:bg-stone-100 flex items-center gap-2"
+                      >
+                        <PauseCircle className="w-4 h-4 text-amber-600" />
+                        <span>
+                          {currentConnection.status === 'paused' ? 'Resume Connection' : 'Pause Connection'}
+                        </span>
+                      </button>
+
+                      <button
+                        onClick={() => {
+                          if (window.confirm(`Are you sure you want to respectfully disconnect from ${otherUser.name}? You can step back anytime.`)) {
+                            disconnectConnection(currentConnection.id);
+                            setShowMenu(false);
+                          }
+                        }}
+                        className="w-full px-4 py-2 text-left text-xs text-stone-700 hover:bg-stone-100 flex items-center gap-2"
+                      >
+                        <UserX className="w-4 h-4 text-stone-500" />
+                        <span>End Connection Gracefully</span>
+                      </button>
+
+                      <div className="border-t border-stone-100 my-1" />
+
+                      <button
+                        onClick={() => {
+                          setReportTargetUser(otherUser);
+                          setShowMenu(false);
+                        }}
+                        className="w-full px-4 py-2 text-left text-xs text-rose-600 hover:bg-rose-50 flex items-center gap-2"
+                      >
+                        <ShieldAlert className="w-4 h-4 text-rose-500" />
+                        <span>Report & Block</span>
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Consent and Boundary Reminder Banner */}
+              <div className="bg-teal-50/70 border-b border-teal-100 px-4 py-2.5 flex items-center justify-between text-xs text-teal-900">
+                <span className="flex items-center gap-1.5 font-medium">
+                  <ShieldCheck className="w-4 h-4 text-teal-700 shrink-0" />
+                  Connected mutually over:{' '}
+                  <strong>{currentConnection.sharedInterests.join(', ')}</strong>
+                </span>
+                <span className="text-[11px] text-teal-700 hidden sm:inline">
+                  You are both free to pause or step back anytime.
+                </span>
+              </div>
+
+              {/* Message History */}
+              <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4 bg-stone-50/30">
+                {/* Initial Icebreaker Context Card */}
+                {currentConnection.initialIcebreaker && (
+                  <div className="bg-white rounded-2xl p-4 border border-stone-200/80 shadow-2xs max-w-md mx-auto text-center space-y-1">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-teal-700">
+                      Introductory Icebreaker
+                    </span>
+                    <p className="text-xs text-stone-700 italic">
+                      "{currentConnection.initialIcebreaker}"
+                    </p>
+                  </div>
+                )}
+
+                {/* Message Bubbles */}
+                {currentMessages.map(msg => {
+                  const isMe = msg.senderId === currentUser.id;
+                  return (
+                    <div
+                      key={msg.id}
+                      className={`flex flex-col ${isMe ? 'items-end' : 'items-start'}`}
+                    >
+                      <div
+                        className={`max-w-[75%] rounded-2xl px-4 py-2.5 text-xs sm:text-sm leading-relaxed ${
+                          isMe
+                            ? 'bg-stone-900 text-white rounded-br-xs'
+                            : 'bg-white text-stone-800 border border-stone-200 shadow-2xs rounded-bl-xs'
+                        }`}
+                      >
+                        {msg.text}
+                      </div>
+                      <span className="text-[10px] text-stone-400 mt-1 px-1">
+                        {msg.timestamp}
+                      </span>
+                    </div>
+                  );
+                })}
+
+                {/* Typing simulation indicator */}
+                {isTyping && (
+                  <div className="flex items-center gap-2 text-stone-400 text-xs pl-2">
+                    <div className="flex gap-1 items-center bg-white border border-stone-200 px-3 py-1.5 rounded-full">
+                      <span className="w-1.5 h-1.5 bg-teal-600 rounded-full animate-bounce" />
+                      <span className="w-1.5 h-1.5 bg-teal-600 rounded-full animate-bounce [animation-delay:0.2s]" />
+                      <span className="w-1.5 h-1.5 bg-teal-600 rounded-full animate-bounce [animation-delay:0.4s]" />
+                    </div>
+                    <span className="text-[11px] text-stone-500 font-medium">
+                      {otherUser.name} is typing a thoughtful reply...
+                    </span>
+                  </div>
+                )}
+
+                <div ref={messagesEndRef} />
+              </div>
+
+              {/* Quick Icebreaker Follow-Up Suggestions */}
+              <div className="px-4 py-2 bg-stone-50 border-t border-stone-100 flex items-center gap-2 overflow-x-auto scrollbar-none">
+                <span className="text-[10px] font-bold text-stone-500 uppercase tracking-wider shrink-0 flex items-center gap-1">
+                  <Sparkles className="w-3 h-3 text-teal-600" />
+                  Ideas:
+                </span>
+                {[
+                  `What got you started in ${otherUser.interests[0]}?`,
+                  `Do you have a favorite spot in ${otherUser.location.split(' ')[0]}?`,
+                  `Totally agree! How do you like to spend your Saturdays?`,
+                ].map((idea, idx) => (
+                  <button
+                    key={idx}
+                    type="button"
+                    onClick={() => handleQuickPrompt(idea)}
+                    className="px-2.5 py-1 bg-white hover:bg-teal-50 border border-stone-200 hover:border-teal-300 rounded-lg text-[11px] text-stone-700 hover:text-teal-900 shrink-0 transition-colors"
+                  >
+                    "{idea}"
+                  </button>
+                ))}
+              </div>
+
+              {/* Chat Input Form */}
+              <form onSubmit={handleSend} className="p-3 bg-white border-t border-stone-200 flex items-center gap-2">
+                <input
+                  type="text"
+                  value={inputVal}
+                  onChange={e => setInputVal(e.target.value)}
+                  placeholder={`Send a respectful message to ${otherUser.name}...`}
+                  className="flex-1 px-4 py-2.5 rounded-xl border border-stone-200 focus:outline-none focus:ring-2 focus:ring-teal-600 text-xs sm:text-sm text-stone-900"
+                />
+                <button
+                  type="submit"
+                  disabled={!inputVal.trim()}
+                  className="p-2.5 rounded-xl bg-stone-900 hover:bg-teal-700 disabled:opacity-40 text-white transition-colors"
+                >
+                  <Send className="w-4 h-4" />
+                </button>
+              </form>
+            </>
+          ) : (
+            <div className="flex-1 flex items-center justify-center p-8 text-stone-400 text-sm">
+              Select a connection from the list on the left to view the conversation.
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
