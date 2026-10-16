@@ -232,6 +232,28 @@ export const AppFooter: React.FC<AppFooterProps> = ({
                 <button
                   onClick={() => {
                     onSelectModule('module-3');
+                    onSelectModule3Tab?.('clearsignals');
+                  }}
+                  className="hover:text-stone-200 transition-colors"
+                >
+                  • ClearSignals Assistant
+                </button>
+              </li>
+              <li>
+                <button
+                  onClick={() => {
+                    onSelectModule('module-3');
+                    onSelectModule3Tab?.('opensignals');
+                  }}
+                  className="hover:text-stone-200 transition-colors text-teal-300 font-semibold"
+                >
+                  • OpenSignals Transparency
+                </button>
+              </li>
+              <li>
+                <button
+                  onClick={() => {
+                    onSelectModule('module-3');
                     onSelectModule3Tab?.('safety');
                   }}
                   className="hover:text-stone-200 transition-colors"

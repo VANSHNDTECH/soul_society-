@@ -28,6 +28,7 @@ import {
   Menu,
   X,
   Sparkles,
+  Sliders,
 } from 'lucide-react';
 
 interface AppHeaderProps {
@@ -118,6 +119,7 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
     { id: 'requests', label: 'Introductions', icon: <Inbox className="w-3.5 h-3.5" />, badge: pendingIncomingCount },
     { id: 'chat', label: 'Connections', icon: <MessageCircle className="w-3.5 h-3.5" />, badge: activeConnectionsCount },
     { id: 'clearsignals', label: 'ClearSignals', icon: <Sparkles className="w-3.5 h-3.5 text-teal-600" /> },
+    { id: 'opensignals', label: 'OpenSignals', icon: <Sliders className="w-3.5 h-3.5 text-teal-700" /> },
     { id: 'safety', label: 'Safety Center', icon: <Shield className="w-3.5 h-3.5" /> },
   ];
 

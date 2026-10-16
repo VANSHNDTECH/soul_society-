@@ -27,11 +27,21 @@ export interface CommunicationPreferences {
   socialEnergy: SocialEnergy;
 }
 
+export interface InfluenceSettings {
+  aiAssistanceEnabled: boolean;
+  useInterestsInMatching: boolean;
+  useIntentionsInMatching: boolean;
+  useValuesInMatching: boolean;
+  useCommunicationPaceInMatching: boolean;
+}
+
 export interface PrivacySettings {
   discoveryPaused: boolean;
   visibility: 'public_match' | 'intentions_only' | 'private';
   showLocation: boolean;
   introRequirement: 'any' | 'shared_intention' | 'high_match';
+  aiAssistanceEnabled?: boolean;
+  influenceSettings?: InfluenceSettings;
 }
 
 export interface User {
@@ -54,6 +64,7 @@ export interface User {
 
 export interface CompatibilityResult {
   totalScore: number;
+  score?: number;
   interestScore: number; // 40% weight
   intentionScore: number; // 30% weight
   valueScore: number; // 20% weight
@@ -66,6 +77,10 @@ export interface CompatibilityResult {
   energyMatch: boolean;
   explanation: string;
   breakdownBullets: string[];
+  reasons?: string[];
+  activeFactors?: string[];
+  inactiveFactors?: string[];
+  isDemoProfile?: boolean;
 }
 
 export interface IntroductionRequest {
@@ -114,4 +129,5 @@ export type ActiveTab =
   | 'chat'
   | 'safety'
   | 'clearsignals'
+  | 'opensignals'
   | 'presentation';

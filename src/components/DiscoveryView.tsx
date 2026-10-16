@@ -16,6 +16,8 @@ import {
   UserCheck,
   ArrowRight,
   Filter,
+  Eye,
+  UserX,
 } from 'lucide-react';
 import { calculateCompatibility } from '../utils/compatibility';
 import { IntentionType, User } from '../types';
@@ -38,6 +40,8 @@ export const DiscoveryView: React.FC = () => {
     minCompatibilityScore,
     setMinCompatibilityScore,
     togglePauseDiscovery,
+    influenceSettings,
+    dismissUserFromDiscovery,
   } = useApp();
 
   const isPaused = currentUser.privacySettings.discoveryPaused;
@@ -53,7 +57,7 @@ export const DiscoveryView: React.FC = () => {
 
   // Calculate compatibility for each discoverable user and apply filters
   const usersWithScores = discoverableUsers.map(user => {
-    const comp = calculateCompatibility(currentUser, user);
+    const comp = calculateCompatibility(currentUser, user, influenceSettings);
     return {
       user,
       comp,
@@ -135,6 +139,30 @@ export const DiscoveryView: React.FC = () => {
             </button>
           )}
         </div>
+      </div>
+
+      {/* OpenSignals Recommendation Transparency Banner */}
+      <div className="bg-gradient-to-r from-teal-50/90 via-stone-50 to-white rounded-2xl p-4 border border-teal-200/80 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs shadow-2xs">
+        <div className="flex items-center gap-2.5">
+          <div className="w-8 h-8 rounded-xl bg-teal-100 text-teal-800 flex items-center justify-center shrink-0">
+            <Eye className="w-4 h-4" />
+          </div>
+          <div>
+            <p className="font-bold text-stone-900">
+              OpenSignals: You have full control over what influences these suggestions.
+            </p>
+            <p className="text-[11px] text-stone-500">
+              Matches are calculated from user-provided tags—never from secret ad profiles or surveillance.
+            </p>
+          </div>
+        </div>
+
+        <button
+          onClick={() => setActiveTab('opensignals')}
+          className="px-3.5 py-1.5 rounded-xl bg-white hover:bg-teal-50 border border-teal-300 text-teal-900 text-xs font-bold transition-colors shadow-2xs shrink-0"
+        >
+          Manage OpenSignals →
+        </button>
       </div>
 
       {/* Filter and Search Bar */}
@@ -340,52 +368,74 @@ export const DiscoveryView: React.FC = () => {
                 </div>
 
                 {/* Card Bottom: Actions */}
-                <div className="p-4 bg-stone-50/70 border-t border-stone-100 flex items-center justify-between gap-2">
-                  <button
-                    onClick={() => setDetailUser(user)}
-                    className="text-xs font-semibold text-stone-600 hover:text-stone-900 px-2.5 py-1.5 rounded-lg hover:bg-stone-200/60 transition-colors"
-                  >
-                    View Details
-                  </button>
+                <div className="p-4 bg-stone-50/70 border-t border-stone-100 flex flex-col gap-2.5">
+                  <div className="flex items-center justify-between gap-2">
+                    <button
+                      onClick={() => setWhyMatchUser(user)}
+                      className="text-xs font-semibold text-teal-800 hover:text-teal-950 flex items-center gap-1 transition-colors"
+                      title="Explain why this recommendation appeared"
+                    >
+                      <Eye className="w-3.5 h-3.5 text-teal-600" />
+                      <span>Why am I seeing this person?</span>
+                    </button>
 
-                  {/* Connect / Chat State */}
-                  {isConnected ? (
-                    <button
-                      onClick={() => {
-                        if (activeConn) {
-                          setActiveConnectionId(activeConn.id);
-                          setActiveTab('chat');
-                        }
-                      }}
-                      className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-semibold shadow-2xs transition-colors"
-                    >
-                      <MessageCircle className="w-3.5 h-3.5" />
-                      <span>Connected • Chat</span>
-                    </button>
-                  ) : hasPendingReceived ? (
-                    <button
-                      onClick={() => setActiveTab('requests')}
-                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-teal-600 hover:bg-teal-700 text-white text-xs font-semibold shadow-2xs transition-colors"
-                    >
-                      <UserCheck className="w-3.5 h-3.5" />
-                      <span>View Invitation</span>
-                    </button>
-                  ) : hasPendingSent ? (
-                    <button
-                      onClick={() => setActiveTab('requests')}
-                      className="px-3 py-1.5 rounded-xl bg-stone-200 text-stone-700 text-xs font-medium cursor-default"
-                    >
-                      Invitation Pending
-                    </button>
-                  ) : (
-                    <button
-                      onClick={() => setIntroTargetUser(user)}
-                      className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-stone-900 hover:bg-teal-700 text-white text-xs font-semibold shadow-2xs transition-all"
-                    >
-                      <HeartHandshake className="w-3.5 h-3.5 text-teal-300" />
-                      <span>Invite to Connect</span>
-                    </button>
-                  )}
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => dismissUserFromDiscovery(user.id)}
+                        className="text-[11px] text-stone-400 hover:text-stone-600 px-1 py-0.5 rounded transition-colors"
+                        title="Dismiss this recommendation from your feed"
+                      >
+                        Dismiss
+                      </button>
+                      <button
+                        onClick={() => setDetailUser(user)}
+                        className="text-xs font-semibold text-stone-600 hover:text-stone-900 px-2 py-1 rounded-lg hover:bg-stone-200/60 transition-colors"
+                      >
+                        View Profile
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="pt-2 border-t border-stone-200/60 flex items-center justify-end">
+                    {/* Connect / Chat State */}
+                    {isConnected ? (
+                      <button
+                        onClick={() => {
+                          if (activeConn) {
+                            setActiveConnectionId(activeConn.id);
+                            setActiveTab('chat');
+                          }
+                        }}
+                        className="w-full sm:w-auto flex items-center justify-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-semibold shadow-2xs transition-colors"
+                      >
+                        <MessageCircle className="w-3.5 h-3.5" />
+                        <span>Connected • Chat</span>
+                      </button>
+                    ) : hasPendingReceived ? (
+                      <button
+                        onClick={() => setActiveTab('requests')}
+                        className="w-full sm:w-auto flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl bg-teal-600 hover:bg-teal-700 text-white text-xs font-semibold shadow-2xs transition-colors"
+                      >
+                        <UserCheck className="w-3.5 h-3.5" />
+                        <span>View Invitation</span>
+                      </button>
+                    ) : hasPendingSent ? (
+                      <button
+                        onClick={() => setActiveTab('requests')}
+                        className="w-full sm:w-auto px-3 py-1.5 rounded-xl bg-stone-200 text-stone-700 text-xs font-medium cursor-default text-center"
+                      >
+                        Invitation Pending
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => setIntroTargetUser(user)}
+                        className="w-full sm:w-auto flex items-center justify-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-stone-900 hover:bg-teal-700 text-white text-xs font-semibold shadow-2xs transition-all"
+                      >
+                        <HeartHandshake className="w-3.5 h-3.5 text-teal-300" />
+                        <span>Invite to Connect</span>
+                      </button>
+                    )}
+                  </div>
                 </div>
               </div>
             );

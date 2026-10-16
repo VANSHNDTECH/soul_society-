@@ -23,6 +23,7 @@ CREATE TABLE IF NOT EXISTS public.profiles (
   discovery_enabled BOOLEAN DEFAULT true,
   profile_visibility TEXT DEFAULT 'standard' CHECK (profile_visibility IN ('standard', 'private', 'hidden')),
   location TEXT,
+  influence_settings JSONB DEFAULT '{"ai_assistance_enabled": true, "use_interests": true, "use_intentions": true, "use_values": true, "use_communication": true}'::jsonb,
   created_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()) NOT NULL,
   updated_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()) NOT NULL
 );

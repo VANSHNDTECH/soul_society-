@@ -10,6 +10,7 @@ import {
   RotateCcw,
   Sparkles,
   Users,
+  Sliders,
 } from 'lucide-react';
 import { ActiveTab } from '../types';
 
@@ -68,6 +69,11 @@ export const Navbar: React.FC<NavbarProps> = ({
       id: 'clearsignals',
       label: 'ClearSignals',
       icon: <Sparkles className="w-4 h-4" />,
+    },
+    {
+      id: 'opensignals',
+      label: 'OpenSignals',
+      icon: <Sliders className="w-4 h-4" />,
     },
     {
       id: 'safety',

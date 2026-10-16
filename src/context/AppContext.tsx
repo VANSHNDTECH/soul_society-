@@ -9,7 +9,9 @@ import {
   IntentionType,
   CommunicationPreferences,
   PrivacySettings,
+  InfluenceSettings,
 } from '../types';
+import { DEFAULT_INFLUENCE_SETTINGS } from '../utils/compatibility';
 import {
   INITIAL_CURRENT_USER,
   MOCK_USERS,
@@ -31,6 +33,11 @@ interface AppContextType {
   updateCurrentUser: (updated: Partial<User>) => void;
   updateCommunicationPreferences: (prefs: Partial<CommunicationPreferences>) => void;
   updatePrivacySettings: (settings: Partial<PrivacySettings>) => void;
+  influenceSettings: InfluenceSettings;
+  updateInfluenceSettings: (settings: Partial<InfluenceSettings>) => void;
+  dismissedUserIds: string[];
+  dismissUserFromDiscovery: (userId: string) => void;
+  resetDismissedUsers: () => void;
   allUsers: User[];
   discoverableUsers: User[];
   activeTab: ActiveTab;
@@ -102,6 +109,8 @@ const STORAGE_KEYS = {
   MESSAGES: 'commonground_messages_v3',
   BLOCKED: 'commonground_blocked_v3',
   REPORTS: 'commonground_reports_v3',
+  INFLUENCE_SETTINGS: 'commonground_influence_settings_v1',
+  DISMISSED_USERS: 'commonground_dismissed_users_v1',
 };
 
 function profileToUser(profile: DbProfile, fallback: User): User {
@@ -137,6 +146,24 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       return saved ? JSON.parse(saved) : INITIAL_CURRENT_USER;
     } catch {
       return INITIAL_CURRENT_USER;
+    }
+  });
+
+  const [influenceSettings, setInfluenceSettings] = useState<InfluenceSettings>(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEYS.INFLUENCE_SETTINGS);
+      return saved ? JSON.parse(saved) : DEFAULT_INFLUENCE_SETTINGS;
+    } catch {
+      return DEFAULT_INFLUENCE_SETTINGS;
+    }
+  });
+
+  const [dismissedUserIds, setDismissedUserIds] = useState<string[]>(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEYS.DISMISSED_USERS);
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
     }
   });
 
@@ -493,11 +520,49 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
 
-  // Discoverable users: candidate users from live DB or mock fallback, excluding blocked users and self
+  const updateInfluenceSettings = async (settings: Partial<InfluenceSettings>) => {
+    setInfluenceSettings(prev => {
+      const updated = { ...prev, ...settings };
+      try {
+        localStorage.setItem(STORAGE_KEYS.INFLUENCE_SETTINGS, JSON.stringify(updated));
+      } catch (e) {
+        console.warn('Failed to save influence settings:', e);
+      }
+      return updated;
+    });
+    showToast('OpenSignals transparency & influence settings updated.', 'success');
+  };
+
+  const dismissUserFromDiscovery = (userId: string) => {
+    setDismissedUserIds(prev => {
+      const updated = Array.from(new Set([...prev, userId]));
+      try {
+        localStorage.setItem(STORAGE_KEYS.DISMISSED_USERS, JSON.stringify(updated));
+      } catch (e) {
+        console.warn('Failed to save dismissed users:', e);
+      }
+      return updated;
+    });
+    showToast('Recommendation dismissed for this session.', 'info');
+  };
+
+  const resetDismissedUsers = () => {
+    setDismissedUserIds([]);
+    try {
+      localStorage.removeItem(STORAGE_KEYS.DISMISSED_USERS);
+    } catch {}
+    showToast('All dismissed recommendations restored.', 'success');
+  };
+
+  // Discoverable users: candidate users from live DB or mock fallback, excluding blocked users, self, and dismissed
   const candidateUsers = isBackend && dbDiscoverableUsers.length > 0 ? dbDiscoverableUsers : MOCK_USERS;
   const allUsers = [currentUser, ...candidateUsers];
   const discoverableUsers = candidateUsers.filter(
-    u => !blockedUserIds.includes(u.id) && u.id !== currentUser.id && !u.privacySettings.discoveryPaused
+    u =>
+      !blockedUserIds.includes(u.id) &&
+      u.id !== currentUser.id &&
+      !u.privacySettings.discoveryPaused &&
+      !dismissedUserIds.includes(u.id)
   );
 
   // Send an introduction invitation
@@ -818,6 +883,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         updateCurrentUser,
         updateCommunicationPreferences,
         updatePrivacySettings,
+        influenceSettings,
+        updateInfluenceSettings,
+        dismissedUserIds,
+        dismissUserFromDiscovery,
+        resetDismissedUsers,
         allUsers,
         discoverableUsers,
         activeTab,

@@ -7,8 +7,9 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "oxlint",
-    "test": "tsx tests/audit_verification.ts && tsx tests/clearsignals_test.ts",
+    "test": "tsx tests/audit_verification.ts && tsx tests/clearsignals_test.ts && tsx tests/opensignals_test.ts",
     "test:clearsignals": "tsx tests/clearsignals_test.ts",
+    "test:opensignals": "tsx tests/opensignals_test.ts",
     "preview": "vite preview"
   },
   "dependencies": {

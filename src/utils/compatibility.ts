@@ -1,9 +1,9 @@
-import { User, CompatibilityResult } from '../types';
+import { User, CompatibilityResult, InfluenceSettings } from '../types';
 
 /**
  * CommonGround Transparent Compatibility Engine
  * 
- * Weights (Configurable & Explainable):
+ * Weights (Configurable & Explainable via OpenSignals):
  * - Shared Interests: 40% (Shared passions, activities, topics)
  * - Compatible Intentions: 30% (Mutual desire for friendship, activity partner, dating, etc.)
  * - Shared Core Values: 20% (Alignment on ethics, lifestyle, worldview)
@@ -20,7 +20,24 @@ export const COMPATIBILITY_WEIGHTS = {
   communication: 0.10,
 };
 
-export function calculateCompatibility(userA: User, userB: User): CompatibilityResult {
+export const DEFAULT_INFLUENCE_SETTINGS: InfluenceSettings = {
+  aiAssistanceEnabled: true,
+  useInterestsInMatching: true,
+  useIntentionsInMatching: true,
+  useValuesInMatching: true,
+  useCommunicationPaceInMatching: true,
+};
+
+export function calculateCompatibility(
+  userA: User,
+  userB: User,
+  customSettings?: InfluenceSettings
+): CompatibilityResult {
+  const settings = customSettings || userA.privacySettings?.influenceSettings || DEFAULT_INFLUENCE_SETTINGS;
+
+  const activeFactors: string[] = [];
+  const inactiveFactors: string[] = [];
+
   // 1. Shared Interests (40%)
   const setAInterests = new Set(userA.interests.map(i => i.toLowerCase().trim()));
   const setBInterests = new Set(userB.interests.map(i => i.toLowerCase().trim()));
@@ -29,83 +46,139 @@ export function calculateCompatibility(userA: User, userB: User): CompatibilityR
     setBInterests.has(i.toLowerCase().trim())
   );
 
-  // Interest score calculation: base on overlap relative to average interests count
-  const maxPossibleShared = Math.max(1, Math.min(userA.interests.length, userB.interests.length));
-  const interestRatio = Math.min(1, sharedInterests.length / Math.min(4, maxPossibleShared));
-  const interestScore = Math.round(interestRatio * 100 * COMPATIBILITY_WEIGHTS.interests);
+  let interestScore = 0;
+  if (settings.useInterestsInMatching) {
+    const maxPossibleShared = Math.max(1, Math.min(userA.interests.length, userB.interests.length));
+    const interestRatio = Math.min(1, sharedInterests.length / Math.min(4, maxPossibleShared));
+    interestScore = Math.round(interestRatio * 100 * COMPATIBILITY_WEIGHTS.interests);
+    if (sharedInterests.length > 0) {
+      activeFactors.push(`Shared Interests: ${sharedInterests.slice(0, 3).join(', ')}`);
+    }
+  } else {
+    inactiveFactors.push('Shared Interests (Turned off in OpenSignals)');
+  }
 
   // 2. Compatible Intentions (30%)
   const setAIntentions = new Set(userA.intentions);
   const sharedIntentions = userB.intentions.filter(intent => setAIntentions.has(intent));
   
-  // Having at least 1 overlapping intention is critical for consent & mutual expectations
-  let intentionRatio = 0;
-  if (sharedIntentions.length > 0) {
-    // 1 match = 80% of intention weight, 2+ matches = 100%
-    intentionRatio = sharedIntentions.length >= 2 ? 1.0 : 0.8;
+  let intentionScore = 0;
+  if (settings.useIntentionsInMatching) {
+    let intentionRatio = 0;
+    if (sharedIntentions.length > 0) {
+      intentionRatio = sharedIntentions.length >= 2 ? 1.0 : 0.8;
+      activeFactors.push(`Compatible Intentions: ${sharedIntentions.join(' & ')}`);
+    } else {
+      intentionRatio = 0.1;
+    }
+    intentionScore = Math.round(intentionRatio * 100 * COMPATIBILITY_WEIGHTS.intentions);
   } else {
-    // Zero intention overlap = low compatibility because goals clash
-    intentionRatio = 0.1;
+    inactiveFactors.push('Compatible Intentions (Turned off in OpenSignals)');
   }
-  const intentionScore = Math.round(intentionRatio * 100 * COMPATIBILITY_WEIGHTS.intentions);
 
   // 3. Shared Values (20%)
   const setBValues = new Set(userB.values.map(v => v.toLowerCase().trim()));
   const sharedValues = userA.values.filter(v => setBValues.has(v.toLowerCase().trim()));
-  const valuesRatio = Math.min(1, sharedValues.length / 2.5);
-  const valueScore = Math.round(valuesRatio * 100 * COMPATIBILITY_WEIGHTS.values);
+  
+  let valueScore = 0;
+  if (settings.useValuesInMatching) {
+    const valuesRatio = Math.min(1, sharedValues.length / 2.5);
+    valueScore = Math.round(valuesRatio * 100 * COMPATIBILITY_WEIGHTS.values);
+    if (sharedValues.length > 0) {
+      activeFactors.push(`Shared Core Values: ${sharedValues.slice(0, 2).join(', ')}`);
+    }
+  } else {
+    inactiveFactors.push('Shared Values (Turned off in OpenSignals)');
+  }
 
   // 4. Communication Preferences (10%)
-  const paceMatch = userA.communicationPreferences.pace === userB.communicationPreferences.pace;
-  const styleMatch = userA.communicationPreferences.style === userB.communicationPreferences.style;
-  const energyMatch = userA.communicationPreferences.socialEnergy === userB.communicationPreferences.socialEnergy;
+  const paceA = userA.communicationPreferences?.pace;
+  const paceB = userB.communicationPreferences?.pace;
+  const paceMatch = Boolean(paceA && paceB && paceA === paceB);
+  const styleMatch = Boolean(
+    userA.communicationPreferences?.style &&
+    userB.communicationPreferences?.style &&
+    userA.communicationPreferences.style === userB.communicationPreferences.style
+  );
+  const energyMatch = Boolean(
+    userA.communicationPreferences?.socialEnergy &&
+    userB.communicationPreferences?.socialEnergy &&
+    userA.communicationPreferences.socialEnergy === userB.communicationPreferences.socialEnergy
+  );
 
-  let commPoints = 0;
-  if (paceMatch) commPoints += 4;
-  if (styleMatch) commPoints += 3;
-  if (energyMatch) commPoints += 3;
-  const communicationScore = Math.round((commPoints / 10) * 100 * COMPATIBILITY_WEIGHTS.communication);
+  let communicationScore = 0;
+  if (settings.useCommunicationPaceInMatching) {
+    let commPoints = 0;
+    if (paceMatch) commPoints += 4;
+    if (styleMatch) commPoints += 3;
+    if (energyMatch) commPoints += 3;
+    communicationScore = Math.round((commPoints / 10) * 100 * COMPATIBILITY_WEIGHTS.communication);
+    if (paceMatch && paceA) {
+      activeFactors.push(`Matching Pace: "${paceA}"`);
+    }
+  } else {
+    inactiveFactors.push('Communication Style & Pace (Turned off in OpenSignals)');
+  }
 
-  const totalScore = Math.min(99, Math.max(25, interestScore + intentionScore + valueScore + communicationScore));
+  const isDemo = Boolean(userB.id?.startsWith('user-demo-') || userB.id?.startsWith('user-current-'));
+
+  const allFactorsDisabled =
+    !settings.useInterestsInMatching &&
+    !settings.useIntentionsInMatching &&
+    !settings.useValuesInMatching &&
+    !settings.useCommunicationPaceInMatching;
+
+  const rawSum = interestScore + intentionScore + valueScore + communicationScore;
+  const totalScore = allFactorsDisabled ? 0 : Math.min(99, Math.max(10, rawSum));
 
   // Natural language explanation
   const breakdownBullets: string[] = [];
-  
-  if (sharedInterests.length > 0) {
-    breakdownBullets.push(
-      `Shared Interests (${Math.round(interestScore / COMPATIBILITY_WEIGHTS.interests)}% match): You both enjoy ${sharedInterests.slice(0, 3).join(', ')}${sharedInterests.length > 3 ? ` and ${sharedInterests.length - 3} more` : ''}.`
-    );
+
+  if (allFactorsDisabled) {
+    breakdownBullets.push('All recommendation influence factors have been disabled in your OpenSignals settings.');
   } else {
-    breakdownBullets.push(`Interests: Few direct overlaps, but great opportunity to exchange perspectives.`);
-  }
+    if (sharedInterests.length > 0 && settings.useInterestsInMatching) {
+      breakdownBullets.push(
+        `Shared Interests (${Math.round(interestScore / COMPATIBILITY_WEIGHTS.interests)}% match): You both enjoy ${sharedInterests.slice(0, 3).join(', ')}${sharedInterests.length > 3 ? ` and ${sharedInterests.length - 3} more` : ''}.`
+      );
+    } else if (!settings.useInterestsInMatching) {
+      breakdownBullets.push(`Interests: Excluded from calculation by your OpenSignals settings.`);
+    } else {
+      breakdownBullets.push(`Interests: Few direct overlaps, but great opportunity to exchange perspectives.`);
+    }
 
-  if (sharedIntentions.length > 0) {
-    breakdownBullets.push(
-      `Mutual Intentions (${Math.round(intentionScore / COMPATIBILITY_WEIGHTS.intentions)}% match): Both looking for ${sharedIntentions.join(' and ')}.`
-    );
-  } else {
-    breakdownBullets.push(`Intentions: Different primary reasons for connecting.`);
-  }
+    if (sharedIntentions.length > 0 && settings.useIntentionsInMatching) {
+      breakdownBullets.push(
+        `Mutual Intentions (${Math.round(intentionScore / COMPATIBILITY_WEIGHTS.intentions)}% match): Both looking for ${sharedIntentions.join(' and ')}.`
+      );
+    } else if (!settings.useIntentionsInMatching) {
+      breakdownBullets.push(`Intentions: Excluded from calculation by your OpenSignals settings.`);
+    } else {
+      breakdownBullets.push(`Intentions: Different primary reasons for connecting.`);
+    }
 
-  if (sharedValues.length > 0) {
-    breakdownBullets.push(
-      `Shared Values (${Math.round(valueScore / COMPATIBILITY_WEIGHTS.values)}% match): Mutual focus on ${sharedValues.slice(0, 2).join(' & ')}.`
-    );
-  }
+    if (sharedValues.length > 0 && settings.useValuesInMatching) {
+      breakdownBullets.push(
+        `Shared Values (${Math.round(valueScore / COMPATIBILITY_WEIGHTS.values)}% match): Mutual focus on ${sharedValues.slice(0, 2).join(' & ')}.`
+      );
+    }
 
-  if (paceMatch) {
-    breakdownBullets.push(
-      `Communication Pace: Both prefer a "${userA.communicationPreferences.pace}" interaction pace.`
-    );
+    if (paceMatch && settings.useCommunicationPaceInMatching && paceA) {
+      breakdownBullets.push(
+        `Communication Pace: Both prefer a "${paceA}" interaction pace.`
+      );
+    }
   }
 
   // Short natural headline explanation
   let explanation = '';
-  if (sharedInterests.length >= 2 && sharedIntentions.length > 0) {
+  if (allFactorsDisabled) {
+    explanation = 'All matching influence factors have been disabled in your OpenSignals settings.';
+  } else if (sharedInterests.length >= 2 && sharedIntentions.length > 0 && settings.useInterestsInMatching) {
     explanation = `You both enjoy ${sharedInterests[0]} and ${sharedInterests[1]}, and both seek ${sharedIntentions[0]}.`;
-  } else if (sharedInterests.length === 1 && sharedIntentions.length > 0) {
+  } else if (sharedInterests.length === 1 && sharedIntentions.length > 0 && settings.useInterestsInMatching) {
     explanation = `Connected through mutual interest in ${sharedInterests[0]} and shared ${sharedIntentions[0]} intention.`;
-  } else if (sharedValues.length > 0) {
+  } else if (sharedValues.length > 0 && settings.useValuesInMatching) {
     explanation = `Strong value alignment in ${sharedValues[0]} with compatible interaction styles.`;
   } else {
     explanation = `Potential for discovering new shared passions and fresh perspectives.`;
@@ -113,6 +186,7 @@ export function calculateCompatibility(userA: User, userB: User): CompatibilityR
 
   return {
     totalScore,
+    score: totalScore,
     interestScore,
     intentionScore,
     valueScore,
@@ -125,6 +199,10 @@ export function calculateCompatibility(userA: User, userB: User): CompatibilityR
     energyMatch,
     explanation,
     breakdownBullets,
+    reasons: breakdownBullets,
+    activeFactors,
+    inactiveFactors,
+    isDemoProfile: isDemo,
   };
 }
 

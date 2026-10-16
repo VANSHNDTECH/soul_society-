@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { clearSignalsService } from '../../services/clearSignalsService';
+import { useApp } from '../../context/AppContext';
 import {
   ConversationMessageAnalysis,
   ReplyDraftResult,
@@ -19,6 +20,8 @@ import {
   ShieldAlert,
   Info,
   Compass,
+  Sliders,
+  Settings,
 } from 'lucide-react';
 
 interface ConversationClearSignalsModalProps {
@@ -69,6 +72,7 @@ export const ConversationClearSignalsModal: React.FC<ConversationClearSignalsMod
   recentMessages,
   onSendMessage,
 }) => {
+  const { influenceSettings, updateInfluenceSettings, setActiveTab } = useApp();
   const [mode, setMode] = useState<'understand' | 'reply'>(initialMode);
 
   // Privacy Consent Gate
@@ -98,7 +102,7 @@ export const ConversationClearSignalsModal: React.FC<ConversationClearSignalsMod
     setHasConsented(true);
     if (mode === 'understand') {
       runAnalysis(selectedMessageText || 'Recent conversation exchange');
-    } else {
+    } else if (influenceSettings.aiAssistanceEnabled) {
       generateDraft(selectedTone);
     }
   };
@@ -120,7 +124,9 @@ export const ConversationClearSignalsModal: React.FC<ConversationClearSignalsMod
 
   const handleToneChange = (tone: ReplyTone) => {
     setSelectedTone(tone);
-    generateDraft(tone);
+    if (influenceSettings.aiAssistanceEnabled) {
+      generateDraft(tone);
+    }
   };
 
   const handleCopy = () => {
@@ -159,6 +165,11 @@ export const ConversationClearSignalsModal: React.FC<ConversationClearSignalsMod
                 <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-md bg-teal-100 text-teal-800">
                   Private & Optional
                 </span>
+                {!influenceSettings.aiAssistanceEnabled && (
+                  <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-md bg-amber-100 text-amber-800">
+                    AI Assist Disabled
+                  </span>
+                )}
               </div>
               <p className="text-xs text-stone-500">
                 Conversation with <strong className="text-stone-800">{otherUser.name}</strong>
@@ -166,12 +177,25 @@ export const ConversationClearSignalsModal: React.FC<ConversationClearSignalsMod
             </div>
           </div>
 
-          <button
-            onClick={onClose}
-            className="p-2 text-stone-400 hover:text-stone-700 rounded-xl hover:bg-stone-200 transition-colors"
-          >
-            <X className="w-5 h-5" />
-          </button>
+          <div className="flex items-center gap-1.5">
+            <button
+              onClick={() => {
+                onClose();
+                setActiveTab('opensignals');
+              }}
+              title="OpenSignals Privacy & Influence Controls"
+              className="p-2 text-stone-400 hover:text-teal-700 rounded-xl hover:bg-stone-100 transition-colors flex items-center gap-1 text-xs"
+            >
+              <Sliders className="w-4 h-4" />
+              <span className="hidden sm:inline font-medium">OpenSignals</span>
+            </button>
+            <button
+              onClick={onClose}
+              className="p-2 text-stone-400 hover:text-stone-700 rounded-xl hover:bg-stone-200 transition-colors"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
         </div>
 
         {/* Mode Switcher Tabs */}
@@ -193,7 +217,7 @@ export const ConversationClearSignalsModal: React.FC<ConversationClearSignalsMod
           <button
             onClick={() => {
               setMode('reply');
-              if (hasConsented) generateDraft(selectedTone);
+              if (hasConsented && influenceSettings.aiAssistanceEnabled) generateDraft(selectedTone);
             }}
             className={`pb-3 px-4 text-xs font-bold transition-all border-b-2 flex items-center gap-1.5 ${
               mode === 'reply'
@@ -220,7 +244,7 @@ export const ConversationClearSignalsModal: React.FC<ConversationClearSignalsMod
                     Your Privacy & Consent Are Protected
                   </h4>
                   <p className="text-xs text-stone-600 leading-relaxed">
-                    Before processing this interaction, please note our strict privacy boundaries:
+                    Before processing this interaction, please note our strict OpenSignals privacy boundaries:
                   </p>
                 </div>
               </div>
@@ -230,13 +254,16 @@ export const ConversationClearSignalsModal: React.FC<ConversationClearSignalsMod
                   <strong>No background surveillance:</strong> ClearSignals only processes the specific message text you explicitly choose.
                 </li>
                 <li>
-                  <strong>Not shared:</strong> The other person is never notified that you reflected on this message.
+                  <strong>Not shared:</strong> The other person is never notified that you reflected on this message or generated a draft.
                 </li>
                 <li>
                   <strong>No mind-reading:</strong> ClearSignals does not claim to diagnose emotions or predict romantic interest as absolute facts.
                 </li>
                 <li>
-                  <strong>You control message sending:</strong> Suggestions are never sent automatically.
+                  <strong>You control message sending:</strong> Suggestions are never sent automatically. You retain full editing and sending control.
+                </li>
+                <li>
+                  <strong>Optional AI:</strong> You can enable or disable AI drafting assistance anytime in your OpenSignals settings.
                 </li>
               </ul>
 
@@ -245,7 +272,7 @@ export const ConversationClearSignalsModal: React.FC<ConversationClearSignalsMod
                   onClick={handleConsent}
                   className="px-5 py-2.5 rounded-xl bg-stone-900 hover:bg-teal-800 text-white font-bold text-xs transition-colors shadow-sm"
                 >
-                  I Understand, Proceed to Analysis →
+                  I Understand, Proceed to Assistant →
                 </button>
               </div>
             </div>
@@ -348,52 +375,128 @@ export const ConversationClearSignalsModal: React.FC<ConversationClearSignalsMod
               {/* MODE 2: Help Me Reply */}
               {mode === 'reply' && (
                 <div className="space-y-6">
-                  {/* Tone Selector */}
-                  <div className="space-y-2">
-                    <label className="text-xs font-bold uppercase tracking-wider text-stone-600">
-                      Choose Your Preferred Tone:
-                    </label>
-                    <div className="grid grid-cols-2 gap-2.5">
-                      {TONE_OPTIONS.map((t) => (
-                        <button
-                          key={t.id}
-                          type="button"
-                          onClick={() => handleToneChange(t.id)}
-                          className={`p-3 rounded-2xl border text-left transition-all ${
-                            selectedTone === t.id
-                              ? 'border-teal-600 bg-teal-50/70 ring-2 ring-teal-600/10'
-                              : 'border-stone-200 hover:border-stone-300 bg-white hover:bg-stone-50'
-                          }`}
-                        >
-                          <div className="flex items-center gap-2">
-                            <span>{t.icon}</span>
-                            <span className="text-xs font-bold text-stone-900">{t.label}</span>
-                          </div>
-                          <p className="text-[11px] text-stone-500 mt-1 leading-snug">{t.desc}</p>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
+                  {/* Check if AI Assistance is Disabled in OpenSignals */}
+                  {!influenceSettings.aiAssistanceEnabled ? (
+                    <div className="p-5 rounded-2xl bg-stone-50 border border-stone-300 space-y-4">
+                      <div className="flex items-start gap-3">
+                        <div className="w-9 h-9 rounded-xl bg-stone-200 text-stone-700 flex items-center justify-center shrink-0">
+                          <Sliders className="w-5 h-5" />
+                        </div>
+                        <div className="space-y-1">
+                          <h4 className="font-bold text-sm text-stone-900">
+                            AI Drafting Assistance Is Turned Off
+                          </h4>
+                          <p className="text-xs text-stone-600 leading-relaxed">
+                            Under your <strong>OpenSignals — Your Control and Transparency</strong> settings, optional AI drafting assistance is disabled. You compose and send messages completely unassisted.
+                          </p>
+                        </div>
+                      </div>
 
-                  {/* Draft Editor */}
+                      <div className="flex flex-wrap items-center gap-2 pt-1">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            updateInfluenceSettings({ aiAssistanceEnabled: true });
+                            generateDraft(selectedTone);
+                          }}
+                          className="px-4 py-2 rounded-xl bg-teal-800 hover:bg-teal-900 text-white font-bold text-xs flex items-center gap-1.5 transition-colors shadow-xs"
+                        >
+                          <Sparkles className="w-3.5 h-3.5" />
+                          <span>Enable AI Drafting Assistance</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            onClose();
+                            setActiveTab('opensignals');
+                          }}
+                          className="px-4 py-2 rounded-xl border border-stone-300 hover:bg-stone-100 text-stone-700 font-medium text-xs flex items-center gap-1.5 transition-colors"
+                        >
+                          <Settings className="w-3.5 h-3.5" />
+                          <span>Manage OpenSignals Settings</span>
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <>
+                      {/* Prominent OpenSignals AI Assistance Disclosure */}
+                      <div className="p-4 rounded-2xl bg-amber-50/90 border border-amber-200 shadow-2xs space-y-1.5">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
+                            <span className="text-xs font-extrabold text-amber-950">
+                              AI-assisted draft — review and edit this message so it reflects what you really mean.
+                            </span>
+                          </div>
+                          <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-md bg-amber-200/80 text-amber-900">
+                            Transparent Disclosure
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-amber-800/90 leading-relaxed">
+                          This draft was generated using assistive communication heuristics. It does not represent verified personal feelings. CommonGround will never send messages automatically; your review and edit are required.
+                        </p>
+                      </div>
+
+                      {/* Tone Selector */}
+                      <div className="space-y-2">
+                        <label className="text-xs font-bold uppercase tracking-wider text-stone-600">
+                          Choose Your Preferred Tone:
+                        </label>
+                        <div className="grid grid-cols-2 gap-2.5">
+                          {TONE_OPTIONS.map((t) => (
+                            <button
+                              key={t.id}
+                              type="button"
+                              onClick={() => handleToneChange(t.id)}
+                              className={`p-3 rounded-2xl border text-left transition-all ${
+                                selectedTone === t.id
+                                  ? 'border-teal-600 bg-teal-50/70 ring-2 ring-teal-600/10'
+                                  : 'border-stone-200 hover:border-stone-300 bg-white hover:bg-stone-50'
+                              }`}
+                            >
+                              <div className="flex items-center gap-2">
+                                <span>{t.icon}</span>
+                                <span className="text-xs font-bold text-stone-900">{t.label}</span>
+                              </div>
+                              <p className="text-[11px] text-stone-500 mt-1 leading-snug">{t.desc}</p>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </>
+                  )}
+
+                  {/* Draft Editor - Available whether AI assisted or self-authored */}
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
                       <label className="text-xs font-bold uppercase tracking-wider text-stone-700 flex items-center gap-1.5">
-                        <span>Generated Draft (Full Editing Freedom):</span>
+                        <span>
+                          {influenceSettings.aiAssistanceEnabled
+                            ? 'Editable Draft (Action: Edit draft):'
+                            : 'Compose Your Authentic Message:'}
+                        </span>
                       </label>
-                      <button
-                        onClick={() => generateDraft(selectedTone)}
-                        className="text-xs font-semibold text-teal-700 hover:text-teal-900 flex items-center gap-1"
-                      >
-                        <RotateCcw className="w-3 h-3" />
-                        <span>Regenerate Draft</span>
-                      </button>
+                      {influenceSettings.aiAssistanceEnabled && (
+                        <button
+                          type="button"
+                          onClick={() => generateDraft(selectedTone)}
+                          className="text-xs font-semibold text-teal-700 hover:text-teal-900 flex items-center gap-1"
+                        >
+                          <RotateCcw className="w-3 h-3" />
+                          <span>Regenerate draft</span>
+                        </button>
+                      )}
                     </div>
 
                     <textarea
                       rows={4}
                       value={editableDraft}
                       onChange={(e) => setEditableDraft(e.target.value)}
+                      placeholder={
+                        influenceSettings.aiAssistanceEnabled
+                          ? 'Review and edit your draft here...'
+                          : 'Write your message directly to ' + otherUser.name + '...'
+                      }
                       className="w-full p-4 rounded-2xl border border-stone-200 focus:outline-none focus:ring-2 focus:ring-teal-600 text-xs sm:text-sm text-stone-900 leading-relaxed"
                     />
 
@@ -418,7 +521,7 @@ export const ConversationClearSignalsModal: React.FC<ConversationClearSignalsMod
                     </div>
                   )}
 
-                  {/* Action Controls */}
+                  {/* Required Actions: Edit draft, Regenerate draft, Copy draft, Send message, Cancel */}
                   <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-3 border-t border-stone-200">
                     <button
                       type="button"
@@ -433,7 +536,7 @@ export const ConversationClearSignalsModal: React.FC<ConversationClearSignalsMod
                       ) : (
                         <>
                           <Copy className="w-4 h-4" />
-                          <span>Copy Draft</span>
+                          <span>Copy draft</span>
                         </>
                       )}
                     </button>
@@ -455,7 +558,7 @@ export const ConversationClearSignalsModal: React.FC<ConversationClearSignalsMod
                           className="px-5 py-2.5 rounded-xl bg-stone-900 hover:bg-teal-800 disabled:opacity-40 text-white font-bold text-xs flex items-center gap-2 transition-colors shadow-sm"
                         >
                           <Send className="w-3.5 h-3.5" />
-                          <span>Send Message to {otherUser.name}</span>
+                          <span>Send message</span>
                         </button>
                       ) : (
                         <div className="flex items-center gap-2 animate-in fade-in">
