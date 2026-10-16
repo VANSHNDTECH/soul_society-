@@ -103,7 +103,7 @@ export interface ReportRecord {
   reason: string;
   details: string;
   timestamp: string;
-  status: 'Received (Local Prototype Sim)' | 'Reviewed' | 'Action Taken';
+  status: 'Received (Saved to PostgreSQL DB)' | 'Received (Local Prototype Sim)' | 'Reviewed' | 'Action Taken';
 }
 
 export type ActiveTab =

@@ -1,5 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { PERSONAS } from '../../data/module2Data';
+import { personaService } from '../../services/personaService';
+import { useApp } from '../../context/AppContext';
+import { PersonaItem } from '../../types/module2';
 import {
   Users,
   Target,
@@ -15,6 +18,9 @@ import {
   Smile,
   ShieldCheck,
   RotateCcw,
+  Edit3,
+  Save,
+  X,
 } from 'lucide-react';
 
 interface PersonaExplorerProps {
@@ -26,11 +32,74 @@ export const PersonaExplorer: React.FC<PersonaExplorerProps> = ({
   selectedPersonaId,
   onSelectPersona,
 }) => {
+  const { userRole, showToast } = useApp();
+  const [personasList, setPersonasList] = useState<PersonaItem[]>(PERSONAS);
   const [viewMode, setViewMode] = useState<'detail' | 'comparison'>('detail');
   const [activeEmpathyQuadrant, setActiveEmpathyQuadrant] = useState<'all' | 'says' | 'thinks' | 'does' | 'feels'>('all');
+  
+  // Editing state for authorized editors
+  const [isEditing, setIsEditing] = useState(false);
+  const [editQuote, setEditQuote] = useState('');
+  const [editPrimaryGoal, setEditPrimaryGoal] = useState('');
+  const [editContext, setEditContext] = useState('');
+  const [isSaving, setIsSaving] = useState(false);
+
+  // Load from database on mount
+  useEffect(() => {
+    personaService.getPersonas().then(data => {
+      if (data && data.length > 0) {
+        setPersonasList(data);
+      }
+    });
+  }, []);
 
   const currentPersona =
-    PERSONAS.find(p => p.id === selectedPersonaId) || PERSONAS[0];
+    personasList.find(p => p.id === selectedPersonaId) || personasList[0];
+
+  const handleStartEdit = () => {
+    if (userRole !== 'editor' && userRole !== 'admin') {
+      showToast('Read-only view. Sign in as Editor/Admin (via top header) to edit personas.', 'info');
+      return;
+    }
+    setEditQuote(currentPersona.illustrativeQuote);
+    setEditPrimaryGoal(currentPersona.primaryGoal);
+    setEditContext(currentPersona.context);
+    setIsEditing(true);
+  };
+
+  const handleSaveEdit = async () => {
+    setIsSaving(true);
+    try {
+      const success = await personaService.updatePersona(currentPersona.id, {
+        illustrativeQuote: editQuote,
+        primaryGoal: editPrimaryGoal,
+        context: editContext,
+      });
+
+      if (success) {
+        setPersonasList(prev =>
+          prev.map(p =>
+            p.id === currentPersona.id
+              ? {
+                  ...p,
+                  illustrativeQuote: editQuote,
+                  primaryGoal: editPrimaryGoal,
+                  context: editContext,
+                }
+              : p
+          )
+        );
+        showToast('Persona details updated and persisted to database.', 'success');
+        setIsEditing(false);
+      } else {
+        showToast('Could not save persona changes.', 'warning');
+      }
+    } catch (e: any) {
+      showToast('Error saving persona: ' + e.message, 'warning');
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8 text-left">
@@ -75,7 +144,7 @@ export const PersonaExplorer: React.FC<PersonaExplorerProps> = ({
 
       {/* Persona Selection Strip */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-        {PERSONAS.map(p => {
+        {personasList.map(p => {
           const isSelected = p.id === currentPersona.id;
           return (
             <button
@@ -152,15 +221,102 @@ export const PersonaExplorer: React.FC<PersonaExplorerProps> = ({
                 </div>
               </div>
 
-              <div className="text-left sm:text-right shrink-0">
+              <div className="text-left sm:text-right shrink-0 space-y-1.5">
                 <span className="text-[10px] uppercase font-bold text-stone-400 block tracking-wider">
                   Research Status
                 </span>
-                <span className="text-xs font-bold text-teal-800 bg-teal-50 px-2.5 py-1 rounded-md border border-teal-200 inline-block mt-0.5">
+                <span className="text-xs font-bold text-teal-800 bg-teal-50 px-2.5 py-1 rounded-md border border-teal-200 inline-block">
                   Illustrative Research Persona
                 </span>
+                <div>
+                  <button
+                    onClick={handleStartEdit}
+                    className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-semibold bg-purple-50 hover:bg-purple-100 text-purple-900 border border-purple-200 transition"
+                    title={userRole === 'editor' || userRole === 'admin' ? 'Edit persona research profile' : 'Sign in as Editor to edit'}
+                  >
+                    <Edit3 className="w-3.5 h-3.5 text-purple-700" />
+                    <span>{userRole === 'editor' || userRole === 'admin' ? 'Edit Persona' : 'Editor View'}</span>
+                  </button>
+                </div>
               </div>
             </div>
+
+            {/* Editing Form Modal / Inline Box */}
+            {isEditing && (
+              <div className="p-5 rounded-2xl bg-purple-50/70 border border-purple-200 space-y-4 text-xs animate-in fade-in">
+                <div className="flex items-center justify-between pb-2 border-b border-purple-200">
+                  <div className="flex items-center gap-2">
+                    <ShieldCheck className="w-4 h-4 text-purple-700" />
+                    <h4 className="font-bold text-purple-950 font-heading">
+                      Authorized Editor: Updating Persona #{currentPersona.name}
+                    </h4>
+                  </div>
+                  <button
+                    onClick={() => setIsEditing(false)}
+                    className="text-stone-400 hover:text-stone-700"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+
+                <div className="space-y-3">
+                  <div>
+                    <label className="block font-semibold text-purple-950 mb-1">
+                      Illustrative Representative Quote:
+                    </label>
+                    <textarea
+                      value={editQuote}
+                      onChange={e => setEditQuote(e.target.value)}
+                      rows={2}
+                      className="w-full p-2.5 rounded-xl border border-purple-200 bg-white text-stone-900 focus:outline-none focus:ring-2 focus:ring-purple-500/20"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block font-semibold text-purple-950 mb-1">
+                      Primary Core Goal:
+                    </label>
+                    <input
+                      type="text"
+                      value={editPrimaryGoal}
+                      onChange={e => setEditPrimaryGoal(e.target.value)}
+                      className="w-full p-2.5 rounded-xl border border-purple-200 bg-white text-stone-900 focus:outline-none focus:ring-2 focus:ring-purple-500/20"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block font-semibold text-purple-950 mb-1">
+                      Context & Life Stage:
+                    </label>
+                    <textarea
+                      value={editContext}
+                      onChange={e => setEditContext(e.target.value)}
+                      rows={2}
+                      className="w-full p-2.5 rounded-xl border border-purple-200 bg-white text-stone-900 focus:outline-none focus:ring-2 focus:ring-purple-500/20"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-end gap-2 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setIsEditing(false)}
+                    className="px-3 py-1.5 rounded-lg border border-stone-200 bg-white text-stone-700 hover:bg-stone-50 font-semibold"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleSaveEdit}
+                    disabled={isSaving}
+                    className="px-4 py-1.5 rounded-lg bg-purple-900 text-white hover:bg-purple-950 font-semibold flex items-center gap-1.5"
+                  >
+                    <Save className="w-3.5 h-3.5" />
+                    <span>{isSaving ? 'Saving to DB...' : 'Save to PostgreSQL'}</span>
+                  </button>
+                </div>
+              </div>
+            )}
 
             {/* Illustrative Quote */}
             <div className="p-4 rounded-2xl bg-gradient-to-r from-purple-50/80 via-white to-stone-50 border border-purple-200 text-stone-800 italic text-xs sm:text-sm leading-relaxed flex items-start gap-3">
@@ -358,7 +514,7 @@ export const PersonaExplorer: React.FC<PersonaExplorerProps> = ({
               <thead>
                 <tr className="bg-stone-50 border-b border-stone-200 text-stone-600 divide-x divide-stone-200">
                   <th className="p-4 font-bold w-1/4">Evaluation Dimension</th>
-                  {PERSONAS.map(p => (
+                  {personasList.map(p => (
                     <th key={p.id} className="p-4 font-bold w-1/4">
                       <div className="flex items-center gap-2">
                         <img
@@ -380,7 +536,7 @@ export const PersonaExplorer: React.FC<PersonaExplorerProps> = ({
                   <td className="p-4 font-bold text-stone-800 bg-stone-50/60 align-top">
                     Context & Life Stage
                   </td>
-                  {PERSONAS.map(p => (
+                  {personasList.map(p => (
                     <td key={p.id} className="p-4 align-top text-stone-700 leading-relaxed">
                       {p.context}
                     </td>
@@ -391,7 +547,7 @@ export const PersonaExplorer: React.FC<PersonaExplorerProps> = ({
                   <td className="p-4 font-bold text-stone-800 bg-stone-50/60 align-top">
                     Primary Goal
                   </td>
-                  {PERSONAS.map(p => (
+                  {personasList.map(p => (
                     <td key={p.id} className="p-4 align-top text-emerald-950 font-medium leading-relaxed">
                       {p.primaryGoal}
                     </td>
@@ -402,7 +558,7 @@ export const PersonaExplorer: React.FC<PersonaExplorerProps> = ({
                   <td className="p-4 font-bold text-stone-800 bg-stone-50/60 align-top">
                     Main Frustrations
                   </td>
-                  {PERSONAS.map(p => (
+                  {personasList.map(p => (
                     <td key={p.id} className="p-4 align-top text-stone-700 space-y-1">
                       {p.painPoints.slice(0, 3).map((pt, idx) => (
                         <div key={idx} className="flex items-start gap-1">
@@ -418,7 +574,7 @@ export const PersonaExplorer: React.FC<PersonaExplorerProps> = ({
                   <td className="p-4 font-bold text-stone-800 bg-stone-50/60 align-top">
                     Unmet Needs
                   </td>
-                  {PERSONAS.map(p => (
+                  {personasList.map(p => (
                     <td key={p.id} className="p-4 align-top text-stone-700 space-y-1">
                       {p.unmetNeeds.slice(0, 3).map((need, idx) => (
                         <div key={idx} className="flex items-start gap-1">
@@ -434,7 +590,7 @@ export const PersonaExplorer: React.FC<PersonaExplorerProps> = ({
                   <td className="p-4 font-bold text-teal-900 bg-teal-50/50 align-top">
                     What CommonGround Solves
                   </td>
-                  {PERSONAS.map(p => (
+                  {personasList.map(p => (
                     <td key={p.id} className="p-4 align-top text-stone-800 leading-relaxed">
                       {p.commonGroundFitSummary}
                     </td>

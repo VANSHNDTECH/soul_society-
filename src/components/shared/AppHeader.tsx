@@ -1,9 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { AppModuleId, ModuleNavigation } from './ModuleNavigation';
 import { ResearchTab } from '../../types/research';
 import { Module2Tab } from '../../types/module2';
 import { ActiveTab } from '../../types';
 import { useApp } from '../../context/AppContext';
+import { AuthModal } from '../auth/AuthModal';
+import { authService, AuthSession } from '../../services/authService';
+import { isSupabaseConfigured } from '../../lib/supabase';
 import {
   Compass,
   Inbox,
@@ -50,6 +53,23 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
   onOpenPresentation,
 }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [authModalOpen, setAuthModalOpen] = useState(false);
+  const [authSession, setAuthSession] = useState<AuthSession>({
+    user: null,
+    profile: null,
+    isAuthenticated: false,
+    isBackendConnected: isSupabaseConfigured(),
+  });
+
+  useEffect(() => {
+    authService.getSession().then((session) => {
+      setAuthSession(session);
+    });
+    const unsubscribe = authService.onAuthStateChange((session) => {
+      setAuthSession(session);
+    });
+    return () => unsubscribe();
+  }, []);
   const {
     activeTab: module3Tab,
     setActiveTab: setModule3Tab,
@@ -159,32 +179,45 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
               <span className="hidden xl:inline">Project Defense</span>
             </button>
 
-            {/* When on Module 3: Show Profile and Reset Demo Data */}
-            {activeModule === 'module-3' && (
-              <div className="flex items-center gap-1.5 sm:gap-2">
-                <button
-                  onClick={() => setModule3Tab('onboarding')}
-                  className="flex items-center gap-1.5 pl-1.5 pr-2.5 py-1 rounded-full border border-stone-200/90 bg-white hover:border-stone-300 shadow-2xs transition-all"
-                  title="Edit Prototype Profile"
-                >
-                  <img
-                    src={currentUser?.avatar}
-                    alt={currentUser?.name || 'User'}
-                    className="w-6 h-6 rounded-full object-cover ring-1 ring-teal-500/30"
-                  />
-                  <span className="text-xs font-medium text-stone-800 hidden sm:inline max-w-[70px] truncate">
-                    {currentUser?.name?.split(' ')[0]}
-                  </span>
-                </button>
+            {/* Database status pill */}
+            <button
+              onClick={() => setAuthModalOpen(true)}
+              className={`hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border transition-all ${
+                isSupabaseConfigured()
+                  ? 'bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border-emerald-200'
+                  : 'bg-amber-50 hover:bg-amber-100 text-amber-800 border-amber-200'
+              }`}
+              title={isSupabaseConfigured() ? 'Supabase Database Connected' : 'Running in Local Demonstration Mode - Click for details'}
+            >
+              <div className={`w-2 h-2 rounded-full ${isSupabaseConfigured() ? 'bg-emerald-500 animate-pulse' : 'bg-amber-500'}`} />
+              <span className="hidden md:inline">{isSupabaseConfigured() ? 'Live Database' : 'Demo Mode'}</span>
+            </button>
 
-                <button
-                  onClick={resetDemoData}
-                  className="p-1.5 text-stone-400 hover:text-stone-700 rounded-lg hover:bg-stone-100 transition-colors"
-                  title="Reset Prototype Demo Data"
-                >
-                  <RotateCcw className="w-3.5 h-3.5" />
-                </button>
-              </div>
+            {/* User Account / Profile Button */}
+            <button
+              onClick={() => setAuthModalOpen(true)}
+              className="flex items-center gap-1.5 pl-1.5 pr-2.5 py-1 rounded-full border border-stone-200/90 bg-white hover:border-stone-300 shadow-2xs transition-all"
+              title="User Account & Role Controls"
+            >
+              <img
+                src={authSession.profile?.avatar_url || currentUser?.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80'}
+                alt="User"
+                className="w-6 h-6 rounded-full object-cover ring-1 ring-teal-500/30"
+              />
+              <span className="text-xs font-medium text-stone-800 hidden sm:inline max-w-[80px] truncate">
+                {authSession.profile?.display_name || currentUser?.name?.split(' ')[0] || 'Sign In'}
+              </span>
+            </button>
+
+            {/* When on Module 3: Reset Demo Data */}
+            {activeModule === 'module-3' && (
+              <button
+                onClick={resetDemoData}
+                className="p-1.5 text-stone-400 hover:text-stone-700 rounded-lg hover:bg-stone-100 transition-colors"
+                title="Reset Prototype Demo Data"
+              >
+                <RotateCcw className="w-3.5 h-3.5" />
+              </button>
             )}
 
             {/* Mobile Menu Toggle Button */}
@@ -343,6 +376,14 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
           </div>
         </div>
       </div>
+      <AuthModal
+        isOpen={authModalOpen}
+        onClose={() => setAuthModalOpen(false)}
+        session={authSession}
+        onSessionUpdated={(newSession) => {
+          setAuthSession(newSession);
+        }}
+      />
     </header>
   );
 };

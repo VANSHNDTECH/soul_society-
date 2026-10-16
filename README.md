@@ -11,7 +11,107 @@ CommonGround is organized into three connected academic modules:
 
 1. 🔍 **Module 1: The Problem Detective** — Evidence-based diagnostic dashboard investigating the empirical failures of existing meeting methods (*"What is going wrong in how people meet, and for whom?"*).
 2. 👥 **Module 2: The People Left Out** — Human-Centered Design research dashboard featuring 3 detailed user personas, 5 barrier categories, 6 meeting methods analyzed, and a traceable feature mapping (*"Who struggles to connect, and what prevents them?"*).
-3. 🚀 **Module 3: The Solution Architect** — Interactive, consent-first prototype with interest-first discovery, double-blind introductions, explainable compatibility, and dignified privacy controls.
+3. 🚀 **Module 3: The Solution Architect** — Interactive, full-stack connection platform backed by persistent PostgreSQL database with interest-first discovery, mutual introduction requests, realtime chat, and dignified safety controls.
+
+---
+
+## ⚡ Full-Stack Transformation & Architecture
+
+CommonGround is built as a production-grade full-stack web application designed for high security, data integrity, and explainable multi-user interaction.
+
+### System Stack
+
+| Layer | Technology | Responsibilities |
+|---|---|---|
+| **Frontend UI** | React 18, TypeScript, Tailwind CSS, Lucide Icons | Responsive multi-module interface, accessible design system, explainable compatibility breakdowns. |
+| **Routing & Shell** | React Router DOM (`/module-1`, `/module-2`, `/module-3`) | Deep linking, browser history preservation, persistent navigation shell. |
+| **Data & State** | React Context (`AppContext`), Service Layer Pattern | Optimistic updates, session caching, state rollbacks, realtime chat subscriptions. |
+| **Database & Auth** | Supabase (PostgreSQL 15), Supabase Auth | User authentication, relational data persistence, canonical connections, audit timestamps. |
+| **Access Control** | Supabase Row Level Security (RLS) | Security Definer functions (`is_editor_or_admin()`, `is_blocked_with()`), column privacy. |
+| **Live Updates** | Supabase Realtime (`postgres_changes` WebSocket) | Instant messaging synchronization across active chat conversations. |
+
+---
+
+### Database Schema Overview
+
+The relational PostgreSQL database is designed across four modular migrations in `supabase/migrations/`:
+
+```mermaid
+erDiagram
+    PROFILES ||--o{ USER_INTERESTS : has
+    INTERESTS ||--o{ USER_INTERESTS : tagged_in
+    PROFILES ||--o{ CONNECTION_REQUESTS : sends_or_receives
+    PROFILES ||--o{ CONNECTIONS : participates
+    CONNECTIONS ||--|| CONVERSATIONS : unlocks
+    CONVERSATIONS ||--o{ MESSAGES : contains
+    PROFILES ||--o{ USER_BLOCKS : blocks
+    PROFILES ||--o{ USER_REPORTS : reports
+    RESEARCH_PROBLEMS ||--o{ RESEARCH_SOURCES : verified_by
+    RESEARCH_PROBLEMS ||--o{ FEATURE_MAPPINGS : informs
+    PERSONAS ||--o{ FEATURE_MAPPINGS : designs_for
+```
+
+1. **`profiles`**: Linked to `auth.users(id)` with cascade deletion. Contains display names, bio, intentions, communication preferences, and private accessibility accommodations.
+2. **`interests` & `user_interests`**: Many-to-many controlled interest taxonomy (Specialty Coffee, Analog Photography, Hiking, etc.).
+3. **`connection_requests`**: Mutual introductions with state machine (`pending`, `accepted`, `declined`, `cancelled`). Enforces unique pending requests per user pair.
+4. **`connections`**: Canonical pairwise relationships (`user1_id < user2_id`). Only created upon mutual acceptance.
+5. **`conversations` & `messages`**: 1-on-1 private messaging channels unlocked only by active connections, with foreign key integrity and Realtime listening.
+6. **`user_blocks` & `user_reports`**: Confidential safety actions that prevent discovery, block new introductions, and log moderation reports securely.
+7. **`research_problems` & `research_sources`**: Module 1 empirical problems and academic source citations with editable composite scores for authorized editors.
+8. **`personas` & `feature_mappings`**: Module 2 human-centered archetypes (Aanya, Rohan, Meera) with customizable goals and traceable feature mappings.
+
+---
+
+### Security & Row Level Security (RLS)
+
+All database operations enforce Row Level Security:
+- **Profile Privacy:** Users can only modify their own profile records. Accessibility preferences are private by default.
+- **Connection Isolation:** Users can only view connection requests where they are the sender or recipient.
+- **Strict Chat Authorization:** Only accepted participants of a canonical connection can read or insert chat messages.
+- **Defensive Blocking:** Discoverable profiles, connection requests, and messages are automatically filtered if a block relationship exists (`is_blocked_with()`).
+- **Editor Privileges:** Modification of shared research findings and user personas is strictly restricted to authenticated users with `editor` or `admin` roles (`is_editor_or_admin()`). Standard visitors receive read-only simulation access.
+
+---
+
+### Dual-Mode Backend Resilience
+
+The application features **Dual-Mode Backend Resilience**:
+1. **Live Cloud Database Mode (Default with credentials):** When `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` are provided, the app connects directly to PostgreSQL with realtime WebSockets, persistent auth, and full RLS.
+2. **Local Demonstration Mode (Graceful Fallback):** When no hosted database credentials are configured (e.g., initial local checkout or sandbox evaluations), the app seamlessly falls back to local in-memory/localStorage demonstration mode. A visual status indicator in the top header clearly identifies active backend status (`Live Database` vs `Demo Mode`).
+
+---
+
+### Setup Instructions
+
+#### 1. Local Development
+```bash
+# Clone the repository
+git clone https://github.com/VANSHNDTECH/soul_society-.git
+cd soul_society-
+
+# Install dependencies
+npm install
+
+# Start development server
+npm run dev
+```
+
+#### 2. Connecting Hosted Supabase (Optional for Live Database)
+1. Create a free PostgreSQL project at [supabase.com](https://supabase.com).
+2. Go to the **SQL Editor** in your Supabase Dashboard.
+3. Open [`supabase/setup.sql`](file:///e:/AICLUB/soul_society-/supabase/setup.sql), copy its contents, and click **Run**. (This sets up all tables, triggers, RLS policies, and seed data in one step).
+4. Create a `.env.local` file in the project root:
+   ```env
+   VITE_SUPABASE_URL=https://your-project-id.supabase.co
+   VITE_SUPABASE_ANON_KEY=your-supabase-anon-public-key
+   ```
+5. Restart your dev server (`npm run dev`). The header badge will immediately switch to 🟢 **Live Database**.
+
+#### 3. Quick-Switch Presentation Accounts
+The app header includes a user account modal allowing evaluators to switch roles on the fly:
+- **Student User (`user`):** Maya Lin (explore discovery, send introductions, chat).
+- **Research Editor (`editor`):** Dr. Elena Rostova (can edit research problem prioritization scores and update personas).
+- **System Admin (`admin`):** Full database administrative permissions.
 
 ---
 

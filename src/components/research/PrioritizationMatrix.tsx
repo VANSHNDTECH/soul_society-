@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { TOP_PROBLEMS } from '../../data/researchData';
+import { researchService } from '../../services/researchService';
+import { useApp } from '../../context/AppContext';
 import {
   Scale,
   RotateCcw,
@@ -8,6 +10,8 @@ import {
   CheckCircle2,
   Sparkles,
   Info,
+  Save,
+  ShieldCheck,
 } from 'lucide-react';
 
 interface ProblemScoreState {
@@ -18,6 +22,9 @@ interface ProblemScoreState {
 }
 
 export const PrioritizationMatrix: React.FC = () => {
+  const { userRole, isBackendConnected, showToast } = useApp();
+  const [isSaving, setIsSaving] = useState(false);
+
   // Initialize state with baseline empirical scores
   const [scores, setScores] = useState<Record<string, ProblemScoreState>>(() => {
     const initial: Record<string, ProblemScoreState> = {};
@@ -59,6 +66,35 @@ export const PrioritizationMatrix: React.FC = () => {
       resetState[p.id] = { ...p.baselineScores };
     });
     setScores(resetState);
+    showToast('Reset to default empirical baseline scores.', 'info');
+  };
+
+  const handleSaveToDatabase = async () => {
+    const isEditor = userRole === 'editor' || userRole === 'admin';
+    if (!isEditor) {
+      showToast('Read-only mode. Sign in as Editor or Admin (via header) to persist scores to database.', 'warning');
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      for (const p of TOP_PROBLEMS) {
+        const s = scores[p.id];
+        const composite = (s.severity * 0.3) + (s.reach * 0.25) + (s.evidenceStrength * 0.25) + (s.opportunity * 0.2);
+        await researchService.updateProblemScore(p.id, {
+          severityScore: s.severity,
+          reachScore: s.reach,
+          evidenceStrengthScore: s.evidenceStrength,
+          designOpportunityScore: s.opportunity,
+          compositeScore: Number(composite.toFixed(2)),
+        });
+      }
+      showToast('Problem prioritization scores saved successfully to PostgreSQL database.', 'success');
+    } catch (e: any) {
+      showToast('Error saving scores to database: ' + e.message, 'warning');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   // Calculate composite scores and sort ranking
@@ -90,15 +126,45 @@ export const PrioritizationMatrix: React.FC = () => {
           </p>
         </div>
 
-        {isModified && (
+        <div className="flex flex-wrap items-center gap-2">
+          {isModified && (
+            <button
+              onClick={handleReset}
+              className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-700 text-xs font-semibold transition-colors shrink-0"
+            >
+              <RotateCcw className="w-3.5 h-3.5" />
+              <span>Reset Baseline</span>
+            </button>
+          )}
+
           <button
-            onClick={handleReset}
-            className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-700 text-xs font-semibold transition-colors shrink-0"
+            onClick={handleSaveToDatabase}
+            disabled={isSaving}
+            className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold transition-all shadow-xs shrink-0 ${
+              userRole === 'editor' || userRole === 'admin'
+                ? 'bg-teal-800 hover:bg-teal-900 text-white'
+                : 'bg-stone-100 hover:bg-stone-200 text-stone-700 border border-stone-200'
+            }`}
+            title={
+              userRole === 'editor' || userRole === 'admin'
+                ? 'Persist changes to PostgreSQL research_problems table'
+                : 'Read-only: Sign in as Editor/Admin to save'
+            }
           >
-            <RotateCcw className="w-3.5 h-3.5" />
-            <span>Reset Baseline Scores</span>
+            {isSaving ? (
+              <span className="animate-spin text-sm">⏳</span>
+            ) : userRole === 'editor' || userRole === 'admin' ? (
+              <Save className="w-3.5 h-3.5 text-teal-300" />
+            ) : (
+              <ShieldCheck className="w-3.5 h-3.5 text-stone-400" />
+            )}
+            <span>
+              {userRole === 'editor' || userRole === 'admin'
+                ? isSaving ? 'Saving...' : 'Save Scores to DB'
+                : 'Editor Save (Sign In)'}
+            </span>
           </button>
-        )}
+        </div>
       </div>
 
       {/* Epistemic Transparency Notice */}

@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import {
   User,
   IntroductionRequest,
@@ -17,6 +17,14 @@ import {
   INITIAL_CONNECTIONS,
   INITIAL_MESSAGES,
 } from '../data/mockUsers';
+import { authService, AuthSession } from '../services/authService';
+import { connectionService } from '../services/connectionService';
+import { chatService } from '../services/chatService';
+import { safetyService } from '../services/safetyService';
+import { profileService } from '../services/profileService';
+import { discoveryService } from '../services/discoveryService';
+import { isSupabaseConfigured } from '../lib/supabase';
+import { DbProfile } from '../types/database';
 
 interface AppContextType {
   currentUser: User;
@@ -78,21 +86,51 @@ interface AppContextType {
   setFilterSearch: (val: string) => void;
   minCompatibilityScore: number;
   setMinCompatibilityScore: (val: number) => void;
+
+  // Full-Stack Extensions
+  isBackendConnected: boolean;
+  userRole: 'user' | 'editor' | 'moderator' | 'admin';
+  refreshBackendData: () => Promise<void>;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 const STORAGE_KEYS = {
-  CURRENT_USER: 'commonground_current_user_v2',
-  INTRODUCTIONS: 'commonground_introductions_v2',
-  CONNECTIONS: 'commonground_connections_v2',
-  MESSAGES: 'commonground_messages_v2',
-  BLOCKED: 'commonground_blocked_v2',
-  REPORTS: 'commonground_reports_v2',
+  CURRENT_USER: 'commonground_current_user_v3',
+  INTRODUCTIONS: 'commonground_introductions_v3',
+  CONNECTIONS: 'commonground_connections_v3',
+  MESSAGES: 'commonground_messages_v3',
+  BLOCKED: 'commonground_blocked_v3',
+  REPORTS: 'commonground_reports_v3',
 };
 
+function profileToUser(profile: DbProfile, fallback: User): User {
+  return {
+    ...fallback,
+    id: profile.id,
+    name: profile.display_name,
+    age: profile.age || fallback.age,
+    bio: profile.bio || fallback.bio,
+    avatar: profile.avatar_url || fallback.avatar,
+    location: profile.location || fallback.location,
+    intentions: (profile.intentions as IntentionType[]) || fallback.intentions,
+    communicationPreferences: {
+      pace: (profile.pace_preference as any) || fallback.communicationPreferences.pace,
+      style: (profile.communication_style as any) || fallback.communicationPreferences.style,
+      socialEnergy: (profile.social_energy as any) || fallback.communicationPreferences.socialEnergy,
+    },
+    privacySettings: {
+      ...fallback.privacySettings,
+      discoveryPaused: !profile.discovery_enabled,
+      visibility: profile.profile_visibility === 'standard' ? 'public_match' : 'private',
+    },
+  };
+}
+
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  // Current user state with local storage hydration
+  const isBackend = isSupabaseConfigured();
+
+  // Current user state
   const [currentUser, setCurrentUser] = useState<User>(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEYS.CURRENT_USER);
@@ -102,6 +140,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   });
 
+  const [userRole, setUserRole] = useState<'user' | 'editor' | 'moderator' | 'admin'>('user');
   const [activePersonaId, setActivePersonaId] = useState<string>('user-current-maya');
   const [activeTab, setActiveTab] = useState<ActiveTab>('landing');
 
@@ -174,7 +213,149 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [filterSearch, setFilterSearch] = useState<string>('');
   const [minCompatibilityScore, setMinCompatibilityScore] = useState<number>(30);
 
-  // Persistence side-effects
+  const showToast = (message: string, type: 'success' | 'info' | 'warning' = 'info') => {
+    setToast({ message, type });
+    setTimeout(() => {
+      setToast(prev => (prev?.message === message ? null : prev));
+    }, 4500);
+  };
+
+  // Sync Auth State & Load Backend Data
+  const refreshBackendData = useCallback(async () => {
+    try {
+      const session = await authService.getSession();
+      if (session.profile) {
+        setUserRole(session.profile.role || 'user');
+        setCurrentUser(prev => profileToUser(session.profile!, prev));
+      }
+
+      if (isBackend && session.user) {
+        // Load real requests from database
+        const { incoming, outgoing } = await connectionService.getRequests(session.user.id);
+        const mappedIncoming: IntroductionRequest[] = incoming.map(r => ({
+          id: r.id,
+          fromUserId: r.sender_id,
+          toUserId: r.recipient_id,
+          icebreakerPrompt: r.shared_interest ? `Let's discuss ${r.shared_interest}` : 'Hello from CommonGround',
+          message: r.intro_message,
+          sharedInterestRef: r.shared_interest || 'CommonGround',
+          createdAt: new Date(r.created_at).toLocaleDateString(),
+          status: r.status,
+        }));
+        const mappedOutgoing: IntroductionRequest[] = outgoing.map(r => ({
+          id: r.id,
+          fromUserId: r.sender_id,
+          toUserId: r.recipient_id,
+          icebreakerPrompt: r.shared_interest ? `Let's discuss ${r.shared_interest}` : 'Hello from CommonGround',
+          message: r.intro_message,
+          sharedInterestRef: r.shared_interest || 'CommonGround',
+          createdAt: new Date(r.created_at).toLocaleDateString(),
+          status: r.status,
+        }));
+        const combined = [...mappedIncoming, ...mappedOutgoing.filter(o => o.status === 'pending')];
+        if (combined.length > 0) {
+          setIntroductions(combined);
+        }
+
+        // Load real connections
+        const dbConnections = await connectionService.getConnections(session.user.id);
+        if (dbConnections.length > 0) {
+          const mappedConns: Connection[] = dbConnections.map(c => ({
+            id: c.id,
+            userIds: [c.user1_id, c.user2_id],
+            status: c.status,
+            connectedAt: new Date(c.created_at).toLocaleDateString(),
+            sharedInterests: ['Specialty Coffee', 'Creative Technology'],
+            initialIcebreaker: 'Connected via mutual introduction on CommonGround',
+          }));
+          setConnections(mappedConns);
+          if (!activeConnectionId && mappedConns.length > 0) {
+            setActiveConnectionId(mappedConns[0].id);
+          }
+        }
+
+        // Load blocked users
+        const blockedList = await safetyService.getBlockedUsers(session.user.id);
+        if (blockedList.length > 0) {
+          setBlockedUserIds(blockedList);
+        }
+      }
+    } catch (err) {
+      console.error('Error synchronizing backend data:', err);
+    }
+  }, [isBackend, activeConnectionId]);
+
+  // Initial mount load
+  useEffect(() => {
+    refreshBackendData();
+
+    // Listen to Supabase auth events
+    const unsub = authService.onAuthStateChange(session => {
+      if (session.profile) {
+        setUserRole(session.profile.role || 'user');
+        setCurrentUser(prev => profileToUser(session.profile!, prev));
+        showToast(`Signed in as ${session.profile.display_name} (${session.profile.role})`, 'success');
+      }
+    });
+
+    return () => unsub();
+  }, [refreshBackendData]);
+
+  // Realtime subscription for active connection chat messages
+  useEffect(() => {
+    if (!activeConnectionId) return;
+
+    let unsubscribe = () => {};
+
+    if (isBackend) {
+      // 1. Fetch existing messages for connection
+      chatService.getOrCreateConversation(activeConnectionId).then(conv => {
+        if (conv) {
+          chatService.getMessages(conv.id).then(dbMsgs => {
+            if (dbMsgs && dbMsgs.length > 0) {
+              setMessages(prev => ({
+                ...prev,
+                [activeConnectionId]: dbMsgs.map(m => ({
+                  id: m.id,
+                  connectionId: activeConnectionId,
+                  senderId: m.sender_id,
+                  text: m.content,
+                  timestamp: new Date(m.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                })),
+              }));
+            }
+          });
+
+          // 2. Subscribe to new incoming messages via Supabase Realtime
+          unsubscribe = chatService.subscribeToMessages(conv.id, newDbMsg => {
+            setMessages(prev => {
+              const currentList = prev[activeConnectionId] || [];
+              if (currentList.some(m => m.id === newDbMsg.id)) return prev;
+              return {
+                ...prev,
+                [activeConnectionId]: [
+                  ...currentList,
+                  {
+                    id: newDbMsg.id,
+                    connectionId: activeConnectionId,
+                    senderId: newDbMsg.sender_id,
+                    text: newDbMsg.content,
+                    timestamp: new Date(newDbMsg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                  },
+                ],
+              };
+            });
+          });
+        }
+      });
+    }
+
+    return () => {
+      unsubscribe();
+    };
+  }, [activeConnectionId, isBackend]);
+
+  // Persistence side-effects in localStorage
   useEffect(() => {
     localStorage.setItem(STORAGE_KEYS.CURRENT_USER, JSON.stringify(currentUser));
   }, [currentUser]);
@@ -199,35 +380,59 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     localStorage.setItem(STORAGE_KEYS.REPORTS, JSON.stringify(reports));
   }, [reports]);
 
-  const showToast = (message: string, type: 'success' | 'info' | 'warning' = 'info') => {
-    setToast({ message, type });
-    setTimeout(() => {
-      setToast(prev => (prev?.message === message ? null : prev));
-    }, 4500);
-  };
-
-  const updateCurrentUser = (updated: Partial<User>) => {
+  // Profile update handler
+  const updateCurrentUser = async (updated: Partial<User>) => {
     setCurrentUser(prev => ({ ...prev, ...updated }));
     showToast('Your profile preferences have been updated.', 'success');
+
+    if (isBackend) {
+      await profileService.updateProfile(currentUser.id, {
+        display_name: updated.name,
+        bio: updated.bio,
+        location: updated.location,
+        avatar_url: updated.avatar,
+        intentions: updated.intentions,
+        communication_style: updated.communicationPreferences?.style,
+        social_energy: updated.communicationPreferences?.socialEnergy,
+        pace_preference: updated.communicationPreferences?.pace,
+      });
+    }
   };
 
-  const updateCommunicationPreferences = (prefs: Partial<CommunicationPreferences>) => {
+  const updateCommunicationPreferences = async (prefs: Partial<CommunicationPreferences>) => {
+    const updated = { ...currentUser.communicationPreferences, ...prefs };
     setCurrentUser(prev => ({
       ...prev,
-      communicationPreferences: { ...prev.communicationPreferences, ...prefs },
+      communicationPreferences: updated,
     }));
     showToast('Communication preferences updated.', 'success');
+
+    if (isBackend) {
+      await profileService.updateProfile(currentUser.id, {
+        communication_style: updated.style,
+        social_energy: updated.socialEnergy,
+        pace_preference: updated.pace,
+      });
+    }
   };
 
-  const updatePrivacySettings = (settings: Partial<PrivacySettings>) => {
+  const updatePrivacySettings = async (settings: Partial<PrivacySettings>) => {
+    const updated = { ...currentUser.privacySettings, ...settings };
     setCurrentUser(prev => ({
       ...prev,
-      privacySettings: { ...prev.privacySettings, ...settings },
+      privacySettings: updated,
     }));
     showToast('Privacy & discovery settings updated.', 'success');
+
+    if (isBackend) {
+      await profileService.updateProfile(currentUser.id, {
+        discovery_enabled: !updated.discoveryPaused,
+        profile_visibility: updated.visibility === 'public_match' ? 'standard' : 'private',
+      });
+    }
   };
 
-  const togglePauseDiscovery = () => {
+  const togglePauseDiscovery = async () => {
     const newState = !currentUser.privacySettings.discoveryPaused;
     setCurrentUser(prev => ({
       ...prev,
@@ -236,10 +441,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         discoveryPaused: newState,
       },
     }));
+
     if (newState) {
       showToast('Discovery paused. Your profile is now hidden from new people.', 'warning');
     } else {
       showToast('Discovery resumed. You are visible to compatible members.', 'success');
+    }
+
+    if (isBackend) {
+      await profileService.updateProfile(currentUser.id, {
+        discovery_enabled: !newState,
+      });
     }
   };
 
@@ -250,13 +462,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   );
 
   // Send an introduction invitation
-  const sendIntroduction = (
+  const sendIntroduction = async (
     toUserId: string,
     icebreakerPrompt: string,
     message: string,
     sharedInterestRef: string
   ) => {
-    const target = MOCK_USERS.find(u => u.id === toUserId);
+    const target = allUsers.find(u => u.id === toUserId);
     if (!target) return;
 
     // Check if one already exists
@@ -268,8 +480,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       return;
     }
 
+    const tempId = `intro-${Date.now()}`;
     const newIntro: IntroductionRequest = {
-      id: `intro-${Date.now()}`,
+      id: tempId,
       fromUserId: currentUser.id,
       toUserId,
       icebreakerPrompt,
@@ -280,16 +493,33 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     };
 
     setIntroductions(prev => [newIntro, ...prev]);
-    showToast(`Introduction sent to ${target.name}. They can accept or decline without pressure.`, 'success');
+    showToast(`Introduction sent to ${target.name}. Saved securely to backend.`, 'success');
     setIntroTargetUser(null);
+
+    if (isBackend) {
+      const { request, error } = await connectionService.sendIntroductionRequest({
+        senderId: currentUser.id,
+        recipientId: toUserId,
+        introMessage: message || icebreakerPrompt,
+        sharedInterest: sharedInterestRef,
+      });
+
+      if (error) {
+        showToast(`Server note: ${error}`, 'warning');
+      } else if (request) {
+        setIntroductions(prev =>
+          prev.map(i => (i.id === tempId ? { ...i, id: request.id } : i))
+        );
+      }
+    }
   };
 
   // Recipient accepts introduction
-  const acceptIntroduction = (introId: string) => {
+  const acceptIntroduction = async (introId: string) => {
     const intro = introductions.find(i => i.id === introId);
     if (!intro) return;
 
-    // Update intro status
+    // Update intro status optimistically
     setIntroductions(prev =>
       prev.map(i => (i.id === introId ? { ...i, status: 'accepted' } : i))
     );
@@ -335,33 +565,56 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     setActiveConnectionId(newConnectionId);
     showToast(`Connection created with ${otherUser?.name || 'them'}! Chat is now unlocked.`, 'success');
+
+    if (isBackend) {
+      const { connection, error } = await connectionService.acceptRequest(introId, currentUser.id);
+      if (error) {
+        console.error('Backend acceptance error:', error);
+      } else if (connection) {
+        // Update connection id to database id
+        setConnections(prev =>
+          prev.map(c => (c.id === newConnectionId ? { ...c, id: connection.id } : c))
+        );
+        setActiveConnectionId(connection.id);
+      }
+    }
   };
 
   // Recipient declines introduction quietly (no penalty, no public counter)
-  const declineIntroduction = (introId: string) => {
+  const declineIntroduction = async (introId: string) => {
     setIntroductions(prev =>
       prev.map(i => (i.id === introId ? { ...i, status: 'declined' } : i))
     );
     showToast('Invitation declined respectfully. No notification of rejection is sent.', 'info');
+
+    if (isBackend) {
+      await connectionService.declineRequest(introId, currentUser.id);
+    }
   };
 
   // Sender cancels introduction
-  const cancelIntroduction = (introId: string) => {
+  const cancelIntroduction = async (introId: string) => {
     setIntroductions(prev =>
       prev.map(i => (i.id === introId ? { ...i, status: 'cancelled' } : i))
     );
     showToast('Pending introduction withdrawn.', 'info');
+
+    if (isBackend) {
+      await connectionService.cancelRequest(introId, currentUser.id);
+    }
   };
 
   // Send a chat message
-  const sendMessage = (connectionId: string, text: string) => {
+  const sendMessage = async (connectionId: string, text: string) => {
     if (!text.trim()) return;
 
+    const trimmed = text.trim();
+    const tempId = `msg-${Date.now()}`;
     const newMsg: ChatMessage = {
-      id: `msg-${Date.now()}`,
+      id: tempId,
       connectionId,
       senderId: currentUser.id,
-      text: text.trim(),
+      text: trimmed,
       timestamp: 'Just now',
     };
 
@@ -370,35 +623,46 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       [connectionId]: [...(prev[connectionId] || []), newMsg],
     }));
 
-    // Find other user in connection to simulate an interactive reply after 1.8 seconds!
-    const conn = connections.find(c => c.id === connectionId);
-    if (conn) {
-      const otherUserId = conn.userIds.find(id => id !== currentUser.id);
-      const otherUser = allUsers.find(u => u.id === otherUserId);
+    if (isBackend) {
+      const conv = await chatService.getOrCreateConversation(connectionId);
+      if (conv) {
+        await chatService.sendMessage({
+          conversationId: conv.id,
+          senderId: currentUser.id,
+          content: trimmed,
+        });
+      }
+    } else {
+      // Local interactive reply simulation
+      const conn = connections.find(c => c.id === connectionId);
+      if (conn) {
+        const otherUserId = conn.userIds.find(id => id !== currentUser.id);
+        const otherUser = allUsers.find(u => u.id === otherUserId);
 
-      if (otherUser) {
-        setTimeout(() => {
-          const autoReplies = [
-            `I really appreciate that! How long have you been interested in ${otherUser.interests[0]}?`,
-            `That resonates so much with me. It’s rare to find people who value ${otherUser.values[0] || 'good conversations'}!`,
-            `Sounds awesome! Would love to hear more about your recent projects or favorite spots around town.`,
-            `Totally agree. That's exactly why I prefer CommonGround over endless swiping apps!`,
-          ];
-          const replyText = autoReplies[Math.floor(Math.random() * autoReplies.length)];
+        if (otherUser) {
+          setTimeout(() => {
+            const autoReplies = [
+              `I really appreciate that! How long have you been interested in ${otherUser.interests[0]}?`,
+              `That resonates so much with me. It’s rare to find people who value ${otherUser.values[0] || 'good conversations'}!`,
+              `Sounds awesome! Would love to hear more about your recent projects or favorite spots around town.`,
+              `Totally agree. That's exactly why I prefer CommonGround over endless swiping apps!`,
+            ];
+            const replyText = autoReplies[Math.floor(Math.random() * autoReplies.length)];
 
-          const replyMsg: ChatMessage = {
-            id: `msg-${Date.now()}-reply`,
-            connectionId,
-            senderId: otherUser.id,
-            text: replyText,
-            timestamp: 'Just now',
-          };
+            const replyMsg: ChatMessage = {
+              id: `msg-${Date.now()}-reply`,
+              connectionId,
+              senderId: otherUser.id,
+              text: replyText,
+              timestamp: 'Just now',
+            };
 
-          setMessages(current => ({
-            ...current,
-            [connectionId]: [...(current[connectionId] || []), replyMsg],
-          }));
-        }, 1800);
+            setMessages(current => ({
+              ...current,
+              [connectionId]: [...(current[connectionId] || []), replyMsg],
+            }));
+          }, 1800);
+        }
       }
     }
   };
@@ -412,15 +676,19 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   // End connection gracefully
-  const disconnectConnection = (connectionId: string) => {
+  const disconnectConnection = async (connectionId: string) => {
     setConnections(prev =>
       prev.map(c => (c.id === connectionId ? { ...c, status: 'disconnected' } : c))
     );
     showToast('Connection ended with mutual respect. Conversation has been archived.', 'info');
+
+    if (isBackend) {
+      await connectionService.disconnect(connectionId);
+    }
   };
 
   // Block user
-  const blockUser = (userId: string) => {
+  const blockUser = async (userId: string) => {
     if (!blockedUserIds.includes(userId)) {
       setBlockedUserIds(prev => [...prev, userId]);
     }
@@ -431,16 +699,24 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const blockedProfile = allUsers.find(u => u.id === userId);
     showToast(`${blockedProfile?.name || 'User'} has been blocked and removed from your discovery view.`, 'warning');
     setDetailUser(null);
+
+    if (isBackend) {
+      await safetyService.blockUser({ blockerId: currentUser.id, blockedId: userId });
+    }
   };
 
-  const unblockUser = (userId: string) => {
+  const unblockUser = async (userId: string) => {
     setBlockedUserIds(prev => prev.filter(id => id !== userId));
     const target = allUsers.find(u => u.id === userId);
     showToast(`${target?.name || 'User'} has been unblocked.`, 'success');
+
+    if (isBackend) {
+      await safetyService.unblockUser(currentUser.id, userId);
+    }
   };
 
   // Report user
-  const submitReport = (userId: string, reason: string, details: string, alsoBlock: boolean = false) => {
+  const submitReport = async (userId: string, reason: string, details: string, alsoBlock: boolean = false) => {
     const target = allUsers.find(u => u.id === userId);
     const newReport: ReportRecord = {
       id: `report-${Date.now()}`,
@@ -454,19 +730,27 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         hour: '2-digit',
         minute: '2-digit',
       }),
-      status: 'Received (Local Prototype Sim)',
+      status: isBackend ? 'Received (Saved to PostgreSQL DB)' : 'Received (Local Prototype Sim)',
     };
 
     setReports(prev => [newReport, ...prev]);
 
     if (alsoBlock) {
-      blockUser(userId);
+      await blockUser(userId);
     }
 
-    showToast(
-      `Report submitted locally. Thank you for helping keep our community safe and respectful.`,
-      'success'
-    );
+    if (isBackend) {
+      await safetyService.reportUser({
+        reporterId: currentUser.id,
+        reportedId: userId,
+        reason,
+        description: details,
+      });
+      showToast('Report submitted and securely stored in database.', 'success');
+    } else {
+      showToast('Report submitted locally. Thank you for helping keep our community safe.', 'success');
+    }
+
     setReportTargetUser(null);
   };
 
@@ -538,6 +822,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         setFilterSearch,
         minCompatibilityScore,
         setMinCompatibilityScore,
+        isBackendConnected: isBackend,
+        userRole,
+        refreshBackendData,
       }}
     >
       {children}
