@@ -113,4 +113,5 @@ export type ActiveTab =
   | 'requests'
   | 'chat'
   | 'safety'
+  | 'clearsignals'
   | 'presentation';

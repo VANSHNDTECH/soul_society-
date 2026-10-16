@@ -130,6 +130,25 @@ CREATE TABLE IF NOT EXISTS public.user_reports (
   CONSTRAINT cannot_report_self CHECK (reporter_id <> reported_id)
 );
 
+-- ----------------------------------------------------------------------------
+-- 8. PRIVATE REFLECTIONS (ClearSignals Cognitive Clarification Sandbox)
+-- ----------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS public.private_reflections (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE NOT NULL,
+  situation TEXT NOT NULL,
+  facts TEXT[] NOT NULL DEFAULT '{}',
+  assumptions TEXT[] NOT NULL DEFAULT '{}',
+  alternative_explanations TEXT[] NOT NULL DEFAULT '{}',
+  unknowns TEXT[] NOT NULL DEFAULT '{}',
+  suggested_next_steps JSONB NOT NULL DEFAULT '[]'::jsonb,
+  scenario_shortcut TEXT,
+  created_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()) NOT NULL,
+  updated_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS private_reflections_user_idx ON public.private_reflections (user_id);
+
 -- Automated update trigger for updated_at column
 CREATE OR REPLACE FUNCTION public.handle_updated_at()
 RETURNS TRIGGER AS $$
@@ -147,6 +166,11 @@ FOR EACH ROW EXECUTE PROCEDURE public.handle_updated_at();
 DROP TRIGGER IF EXISTS set_requests_updated_at ON public.connection_requests;
 CREATE TRIGGER set_requests_updated_at
 BEFORE UPDATE ON public.connection_requests
+FOR EACH ROW EXECUTE PROCEDURE public.handle_updated_at();
+
+DROP TRIGGER IF EXISTS set_reflections_updated_at ON public.private_reflections;
+CREATE TRIGGER set_reflections_updated_at
+BEFORE UPDATE ON public.private_reflections
 FOR EACH ROW EXECUTE PROCEDURE public.handle_updated_at();
 -- ============================================================================
 -- CommonGround Migration 002: Research Intelligence & Persona Schema
@@ -283,6 +307,7 @@ ALTER TABLE public.meeting_methods ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.personas ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.feature_mappings ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.persona_validation_questions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.private_reflections ENABLE ROW LEVEL SECURITY;
 
 -- Helper function: Check if current user is an authorized editor or admin
 CREATE OR REPLACE FUNCTION public.is_editor_or_admin()
@@ -498,6 +523,26 @@ ON public.persona_validation_questions FOR SELECT USING (true);
 CREATE POLICY "Editors can modify validation questions"
 ON public.persona_validation_questions FOR ALL
 USING (public.is_editor_or_admin());
+
+-- ----------------------------------------------------------------------------
+-- 9. CLEARSIGNALS PRIVATE REFLECTIONS POLICIES (Strict Private Ownership)
+-- ----------------------------------------------------------------------------
+CREATE POLICY "Users can only view their own private reflections"
+ON public.private_reflections FOR SELECT
+USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can create their own private reflections"
+ON public.private_reflections FOR INSERT
+WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can update their own private reflections"
+ON public.private_reflections FOR UPDATE
+USING (auth.uid() = user_id)
+WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can delete their own private reflections"
+ON public.private_reflections FOR DELETE
+USING (auth.uid() = user_id);
 -- ============================================================================
 -- CommonGround Migration 004: Seed Data for Research, Personas, and Taxonomy
 -- ============================================================================

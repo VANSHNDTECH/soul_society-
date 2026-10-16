@@ -65,6 +65,11 @@ export const Navbar: React.FC<NavbarProps> = ({
       badge: activeConnectionsCount,
     },
     {
+      id: 'clearsignals',
+      label: 'ClearSignals',
+      icon: <Sparkles className="w-4 h-4" />,
+    },
+    {
       id: 'safety',
       label: 'Safety & Privacy',
       icon: <Shield className="w-4 h-4" />,

@@ -6,6 +6,7 @@ import { DiscoveryView } from './DiscoveryView';
 import { IntroductionsView } from './IntroductionsView';
 import { ConnectionsChatView } from './ConnectionsChatView';
 import { SafetyCenterView } from './SafetyCenterView';
+import { ClearSignalsView } from './clearsignals/ClearSignalsView';
 
 export const Module3PrototypeView: React.FC = () => {
   const { activeTab } = useApp();
@@ -17,6 +18,7 @@ export const Module3PrototypeView: React.FC = () => {
       {activeTab === 'discovery' && <DiscoveryView />}
       {activeTab === 'requests' && <IntroductionsView />}
       {activeTab === 'chat' && <ConnectionsChatView />}
+      {activeTab === 'clearsignals' && <ClearSignalsView />}
       {activeTab === 'safety' && <SafetyCenterView />}
     </div>
   );
