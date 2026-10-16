@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { AppProvider, useApp } from './context/AppContext';
+import { ResearchDashboard } from './components/research/ResearchDashboard';
 import { Navbar } from './components/Navbar';
 import { Toast } from './components/Toast';
 import { LandingPage } from './components/LandingPage';
@@ -13,16 +14,17 @@ import { IntroductionModal } from './components/IntroductionModal';
 import { WhyMatchModal } from './components/WhyMatchModal';
 import { ReportModal } from './components/ReportModal';
 import { AcademicPresentationModal } from './components/AcademicPresentationModal';
-import { Sparkles, Shield, HeartHandshake, GraduationCap } from 'lucide-react';
+import { Sparkles, Shield, HeartHandshake, GraduationCap, Compass } from 'lucide-react';
 
-
-const MainContent: React.FC = () => {
+const PrototypeMainContent: React.FC<{ onSwitchToResearch: () => void }> = ({
+  onSwitchToResearch,
+}) => {
   const { activeTab, setActiveTab, setShowPresentationModal } = useApp();
 
   return (
     <div className="min-h-screen flex flex-col justify-between bg-[#FAF9F5] text-stone-800">
       {/* Navigation */}
-      <Navbar />
+      <Navbar onSwitchToResearch={onSwitchToResearch} />
 
       {/* Screen Views */}
       <main className="flex-1">
@@ -52,15 +54,23 @@ const MainContent: React.FC = () => {
                   CommonGround
                 </span>
                 <span className="text-[10px] bg-teal-900/60 text-teal-300 px-2 py-0.5 rounded-full border border-teal-700/60 font-semibold">
-                  Consent-First Social Discovery
+                  Module 3: Solution Prototype
                 </span>
               </div>
               <p className="text-stone-400 text-xs max-w-lg">
-                Better connections begin with common ground. A platform prioritizing shared interests, transparent compatibility, and psychological safety over swiping games.
+                Better connections begin with common ground. A consent-first platform prioritizing shared interests, transparent compatibility, and psychological safety over swiping games.
               </p>
             </div>
 
             <div className="flex flex-wrap items-center gap-3">
+              <button
+                onClick={onSwitchToResearch}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-teal-700 hover:bg-teal-600 text-white text-xs font-bold transition-colors"
+              >
+                <Compass className="w-4 h-4 text-teal-200" />
+                <span>Open Module 1 Research Dashboard</span>
+              </button>
+
               <button
                 onClick={() => setShowPresentationModal(true)}
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-stone-800 hover:bg-stone-700 text-stone-200 text-xs font-medium transition-colors"
@@ -94,9 +104,19 @@ const MainContent: React.FC = () => {
 };
 
 export default function App() {
+  const [appMode, setAppMode] = useState<'module1_research' | 'module3_prototype'>('module1_research');
+
   return (
     <AppProvider>
-      <MainContent />
+      {appMode === 'module1_research' ? (
+        <ResearchDashboard
+          onSwitchToPrototype={() => setAppMode('module3_prototype')}
+        />
+      ) : (
+        <PrototypeMainContent
+          onSwitchToResearch={() => setAppMode('module1_research')}
+        />
+      )}
     </AppProvider>
   );
 }

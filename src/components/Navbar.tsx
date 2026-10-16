@@ -13,7 +13,11 @@ import {
 } from 'lucide-react';
 import { ActiveTab } from '../types';
 
-export const Navbar: React.FC = () => {
+interface NavbarProps {
+  onSwitchToResearch?: () => void;
+}
+
+export const Navbar: React.FC<NavbarProps> = ({ onSwitchToResearch }) => {
   const {
     activeTab,
     setActiveTab,
@@ -22,11 +26,8 @@ export const Navbar: React.FC = () => {
     currentUser,
     setShowPresentationModal,
     resetDemoData,
-    activePersonaId,
-    setActivePersonaId,
-    allUsers,
-    showToast,
   } = useApp();
+
 
   // Pending incoming introductions for current user
   const pendingIncomingCount = introductions.filter(
@@ -124,10 +125,22 @@ export const Navbar: React.FC = () => {
             })}
           </nav>
 
-          {/* Right Controls: Persona Switcher, Presentation, Profile */}
+          {/* Right Controls: Module 1 Switcher, Presentation, Profile */}
           <div className="flex items-center gap-2 sm:gap-3">
+            {onSwitchToResearch && (
+              <button
+                onClick={onSwitchToResearch}
+                className="flex items-center gap-1.5 bg-stone-900 hover:bg-stone-800 text-teal-300 border border-stone-700 text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors shadow-2xs"
+                title="Switch back to Module 1: The Problem Detective Research Dashboard"
+              >
+                <Compass className="w-4 h-4 text-teal-400" />
+                <span className="hidden sm:inline">Module 1 Research</span>
+              </button>
+            )}
+
             {/* Discovery Paused Pill */}
             {isDiscoveryPaused && (
+
               <button
                 onClick={() => setActiveTab('safety')}
                 className="hidden lg:flex items-center gap-1.5 bg-amber-50 border border-amber-200 text-amber-800 text-xs px-2.5 py-1.5 rounded-lg hover:bg-amber-100 transition-colors"

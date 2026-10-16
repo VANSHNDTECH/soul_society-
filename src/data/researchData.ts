@@ -1,0 +1,718 @@
+import {
+  ProblemItem,
+  EvidenceSource,
+  MeetingMethod,
+  SolutionBridgeItem,
+  ResearchGap,
+  InterviewQuestionItem,
+} from '../types/research';
+
+export const RESEARCH_OVERVIEW_META = {
+  projectTitle: 'The Problem Detective',
+  moduleNumber: 'Module 1',
+  centralQuestion: 'What is actually going wrong in how people come to meet, and for whom?',
+  academicContext: 'CommonGround Human-Centered Computing Research Initiative',
+  researchCoverageRate: '100% of shortlisted problems grounded in peer-reviewed or federal evidence',
+  verifiedSourceCount: 9,
+  lastUpdated: 'October 2026',
+};
+
+export const EVIDENCE_SOURCES: EvidenceSource[] = [
+  {
+    id: 'src-pew-2023-unwanted',
+    problemId: 'prob-2-ghosting-unwanted',
+    claim: 'Nearly half of U.S. online daters experience unsolicited explicit content, harassment, or unwanted persistent contact.',
+    sourceTitle: 'From Looking for Love to Swiping the Field: Online Dating in the U.S.',
+    authorOrOrganization: 'Pew Research Center (Colleen McClain et al.)',
+    publicationDate: 'February 2, 2023',
+    sourceType: 'Reputable Survey Institution',
+    relevantFinding: '48% of U.S. adults who have ever used a dating site or app reported experiencing at least one of four unwanted behaviors: receiving unsolicited sexually explicit messages/images (38%), continued contact after stating disinterest (30%), offensive name-calling (24%), or physical threats (6%).',
+    exactStatistic: '48% experienced ≥1 unwanted behavior; 56% of women under 50 received unsolicited explicit images',
+    populationAndGeography: 'Nationally representative sample of 6,034 U.S. adults, including 1,675 who have ever used online dating.',
+    whatItSupports: 'Establishes high prevalence of boundary violations and unwanted interactions in current app paradigms, particularly disproportionately affecting women under 50.',
+    whatItDoesNotEstablish: 'Does not establish that all unwanted interactions stem from malicious actors; does not measure "ghosting" frequency (which requires separate operationalization).',
+    limitations: 'Self-reported survey data; restricted to U.S. adults; excludes non-dating friend-finder apps.',
+    directUrl: 'https://www.pewresearch.org/internet/2023/02/02/the-experiences-of-u-s-online-daters/',
+    confidenceLevel: 'Strong',
+    confidenceJustification: 'Large, probabilistic, nationally representative sample by a leading non-partisan demographic research institution.',
+  },
+  {
+    id: 'src-pew-2023-scams',
+    problemId: 'prob-5-trust-scams',
+    claim: 'A majority of online daters report subjective perception of encountering scammers and fraudulent profiles.',
+    sourceTitle: 'From Looking for Love to Swiping the Field: Online Dating in the U.S.',
+    authorOrOrganization: 'Pew Research Center',
+    publicationDate: 'February 2, 2023',
+    sourceType: 'Reputable Survey Institution',
+    relevantFinding: '52% of U.S. online daters believe they have encountered someone on a dating platform who was attempting to scam them.',
+    exactStatistic: '52% perceived scam encounters',
+    populationAndGeography: 'Nationally representative sample of 1,675 U.S. adult online daters.',
+    whatItSupports: 'Demonstrates widespread trust deficits and pervasive suspicion during initial discovery.',
+    whatItDoesNotEstablish: 'Does not measure the verified forensic count of fraudulent accounts, only self-reported user suspicion and perception.',
+    limitations: 'Subjective perception may overestimate or underestimate actual malicious activity.',
+    directUrl: 'https://www.pewresearch.org/internet/2023/02/02/the-experiences-of-u-s-online-daters/',
+    confidenceLevel: 'Strong',
+    confidenceJustification: 'Rigorous national polling measuring the psychological perception of trust and safety.',
+  },
+  {
+    id: 'src-zhao-2023-homophily',
+    problemId: 'prob-3-limited-circles',
+    claim: 'Initial network segregation structurally reinforces homophily over time; passive proximity alone does not bridge social divides.',
+    sourceTitle: 'Networks in the making: Friendship segregation and ethnic homophily',
+    authorOrOrganization: 'Linda Zhao (Dept. of Sociology, University of Chicago), Social Science Research',
+    publicationDate: 'February 2023',
+    sourceType: 'Peer-Reviewed Academic',
+    relevantFinding: 'Longitudinal stochastic actor-oriented modeling reveals that existing network segregation acts as an incubator for ongoing homophily. Rather than diversity naturally dispersing social circles, existing friendship structures constrain newly forming ties unless active bridging conditions are present.',
+    exactStatistic: 'Longitudinal peer network models demonstrate statistically significant self-reinforcing clustering effects over time',
+    populationAndGeography: 'Longitudinal adolescent peer networks in Swedish school cohorts.',
+    whatItSupports: 'Demonstrates why relying solely on existing friends, family, and localized social circles structurally reproduces homogeneous networks and excludes newcomers.',
+    whatItDoesNotEstablish: 'Does not suggest that shared cultural backgrounds or existing friendships are negative; only explains how closed social topologies limit intergroup mobility.',
+    limitations: 'Focuses on school-age cohort networks; adult vocational and neighborhood networks may exhibit modified dynamics.',
+    directUrl: 'https://pubmed.ncbi.nlm.nih.gov/36797007/',
+    confidenceLevel: 'Strong',
+    confidenceJustification: 'Peer-reviewed empirical study published in Social Science Research utilizing rigorous dynamic network modeling.',
+  },
+  {
+    id: 'src-finkel-2012-critical',
+    problemId: 'prob-1-superficial-signals',
+    claim: 'Profile-based shopping encourages a commodified marketplace mindset, while static profiles fail to predict dyadic relational chemistry.',
+    sourceTitle: 'Online Dating: A Critical Analysis From the Perspective of Psychological Science',
+    authorOrOrganization: 'Eli J. Finkel, Paul W. Eastwick, Benjamin R. Karney, Harry T. Reis, & Susan Sprecher',
+    publicationDate: 'February 2012',
+    sourceType: 'Peer-Reviewed Academic',
+    relevantFinding: 'Evaluating humans through comparative profile grids induces a "supermarket mindset" where individuals are treated as bundles of commodified attributes. Crucially, the authors found no empirical evidence that static individual questionnaire matching can predict emergent relational processes (how two people interact, handle friction, and adapt over time).',
+    exactStatistic: 'No empirical verification for proprietary algorithmic claims predicting dyadic compatibility from static attributes',
+    populationAndGeography: 'Meta-analysis and critical review across multiple empirical psychological datasets in the United States.',
+    whatItSupports: 'Establishes theoretical and empirical limitations of treating connection discovery like e-commerce product filtering, and confirms why shared intentions and dynamic conversational contexts matter more than static matching.',
+    whatItDoesNotEstablish: 'Does not argue that online discovery cannot produce successful relationships; rather demonstrates that excessive comparative options and shallow photo appraisal impair human decision-making.',
+    limitations: 'Review paper focusing on romantic matching rather than platonic or activity partner platforms.',
+    directUrl: 'https://doi.org/10.1177/1529100612436522',
+    confidenceLevel: 'Strong',
+    confidenceJustification: 'Seminal landmark review in Psychological Science in the Public Interest (APS), cited over 1,500 times.',
+  },
+  {
+    id: 'src-surgeon-general-2023',
+    problemId: 'prob-4-chance-barriers',
+    claim: 'Social isolation and community infrastructure decline create profound health vulnerabilities; spontaneous physical encounters are systematically constrained.',
+    sourceTitle: 'Our Epidemic of Loneliness and Isolation: The U.S. Surgeon General’s Advisory on the Healing Effects of Social Connection and Community',
+    authorOrOrganization: 'Office of the U.S. Surgeon General (Dr. Vivek H. Murthy, U.S. Dept. of Health and Human Services)',
+    publicationDate: 'May 2023',
+    sourceType: 'Government & Public Health',
+    relevantFinding: 'Lack of social connection is associated with a 29% increased risk of heart disease, a 32% increased risk of stroke, and a 50% increased risk of dementia among older adults. Social participation in physical community organizations and informal neighborhood social spaces ("third places") has precipitously declined over the past two decades.',
+    exactStatistic: 'Mortality impact of severe social isolation equivalent to smoking up to 15 cigarettes per day; 20-year decline in local community participation',
+    populationAndGeography: 'Comprehensive epidemiological and sociological meta-synthesis of U.S. population health data.',
+    whatItSupports: 'Substantiates that modern social isolation is an urgent public health crisis and that people cannot simply rely on serendipitous chance encounters when civic infrastructure has eroded.',
+    whatItDoesNotEstablish: 'Does not measure the exact failure rate of spontaneous chance encounters per person; establishes the structural decline of opportunities for natural social gathering.',
+    limitations: 'Government advisory drawing on multiple disparate longitudinal studies rather than a single randomized trial.',
+    directUrl: 'https://www.ncbi.nlm.nih.gov/books/NBK595227/',
+    confidenceLevel: 'Strong',
+    confidenceJustification: 'Highest-level federal public health advisory synthesized by the U.S. Surgeon General with exhaustive epidemiological citations.',
+  },
+  {
+    id: 'src-heino-2010-marketplace',
+    problemId: 'prob-1-superficial-signals',
+    claim: 'Interface affordances centered on photos and bullet points induce users to adopt transactional evaluation habits.',
+    sourceTitle: 'Finding the One Online: Exploring the Marketplace Mindset of Online Daters',
+    authorOrOrganization: 'Rebecca D. Heino, Nicole T. Ellison, & Jeffrey B. Hancock (Journal of Social and Personal Relationships)',
+    publicationDate: 'August 2010',
+    sourceType: 'Peer-Reviewed Academic',
+    relevantFinding: 'Qualitative and thematic analysis revealed users conceptualize discovery through economic metaphors ("window shopping," "market value," "inventory turnover"), leading to heightened cynicism and objectification.',
+    exactStatistic: 'Identified recurring cognitive marketplace framing across qualitative participant cohorts',
+    populationAndGeography: 'In-depth interviews with 34 active online dating users in the U.S.',
+    whatItSupports: 'Confirms that digital interface design choices shape cognitive orientation toward other people as commodities.',
+    whatItDoesNotEstablish: 'Small qualitative sample; cannot quantify exact population prevalence.',
+    limitations: 'Qualitative interview study with modest sample size.',
+    directUrl: 'https://doi.org/10.1177/0265407510373753',
+    confidenceLevel: 'Moderate',
+    confidenceJustification: 'Rigorous qualitative peer-reviewed study providing deep conceptual models of interface-driven commodification.',
+  },
+  {
+    id: 'src-iyengar-lepper-2000',
+    problemId: 'prob-1-superficial-signals',
+    claim: 'Extensive choice options induce cognitive overload, decision paralysis, and reduced post-choice satisfaction.',
+    sourceTitle: 'When Choice is Demotivating: Can One Desire Too Much of a Good Thing?',
+    authorOrOrganization: 'Sheena S. Iyengar & Mark R. Lepper (Journal of Personality and Social Psychology)',
+    publicationDate: 'December 2000',
+    sourceType: 'Peer-Reviewed Academic',
+    relevantFinding: 'Subjects presented with an extensive selection of choices (24 options) were significantly less likely to make a final decision, and reported lower satisfaction with their choice, compared to those presented with a limited selection (6 options).',
+    exactStatistic: '30% purchasing decision rate in limited-choice condition vs. 3% in extensive-choice condition (10x difference)',
+    populationAndGeography: 'Laboratory and field experimental cohorts in California, USA.',
+    whatItSupports: 'Explains why infinite swipe decks generate decision fatigue, superficial scanning heuristics, and reluctance to commit to any single conversation.',
+    whatItDoesNotEstablish: 'Experimental setting tested consumer goods and essay topics; must be carefully extrapolated to interpersonal social choices.',
+    limitations: 'Original experiments tested products; applicability to human matchmaking is an analogical extrapolation supported by later relationship literature (e.g., Finkel 2012).',
+    directUrl: 'https://doi.org/10.1037/0022-3514.79.6.995',
+    confidenceLevel: 'Moderate',
+    confidenceJustification: 'Foundational psychological science with broad experimental replication, applied to digital decision architectures.',
+  },
+  {
+    id: 'src-lefebvre-2019-ghosting',
+    problemId: 'prob-2-ghosting-unwanted',
+    claim: 'Ghosting represents an avoidant communication strategy driven by convenience and discomfort with direct boundary expression.',
+    sourceTitle: 'Ghosting in Emerging Adults’ Romantic Relationships: The Digital Dissolution Process',
+    authorOrOrganization: 'Leah E. LeFebvre et al. (Imagination, Cognition and Personality)',
+    publicationDate: 'March 2019',
+    sourceType: 'Peer-Reviewed Academic',
+    relevantFinding: 'Participants reported that the absence of structured, low-friction closure tools in digital platforms incentivizes sudden communicative disappearance ("ghosting") to avoid confrontation, leaving recipients with ambiguity and negative self-attribution.',
+    exactStatistic: '78% of surveyed emerging adult participants reported having been ghosted; convenience and conflict-avoidance cited as primary motivations',
+    populationAndGeography: 'Qualitative and quantitative study of 271 emerging adults at a U.S. university.',
+    whatItSupports: 'Substantiates that ghosting is a systemic feature of low-friction digital interfaces that lack built-in dignified exit mechanics.',
+    whatItDoesNotEstablish: 'Sample restricted to college-age emerging adults; older demographic cohorts may utilize different disengagement patterns.',
+    limitations: 'University student sample; retrospective self-reporting.',
+    directUrl: 'https://doi.org/10.1177/0276236618820303',
+    confidenceLevel: 'Moderate',
+    confidenceJustification: 'Peer-reviewed empirical study dedicated to the psychological mechanics of digital relationship dissolution.',
+  },
+  {
+    id: 'src-ftc-2023-scams',
+    problemId: 'prob-5-trust-scams',
+    claim: 'Impersonation and romance fraud represent major financial and psychological threats in digital connection environments.',
+    sourceTitle: 'Romance Scammers’ Favorite Lies Exposed: FTC Data Spotlight',
+    authorOrOrganization: 'Federal Trade Commission (FTC)',
+    publicationDate: 'February 9, 2023',
+    sourceType: 'Regulatory Agency',
+    relevantFinding: 'In 2022, nearly 70,000 consumers reported romance scams to the FTC, with total reported losses reaching $1.3 billion. The median reported individual loss was $4,400.',
+    exactStatistic: '$1.3 billion reported losses; ~70,000 consumer reports in 2022',
+    populationAndGeography: 'FTC Consumer Sentinel Network data encompassing consumer complaints across the United States.',
+    whatItSupports: 'Provides verifiable, institutional documentation of financial harms stemming from fake profiles and manipulative misrepresentation on digital platforms.',
+    whatItDoesNotEstablish: 'Captures only reported scams; the true volume (including unreported cases due to shame) is estimated to be higher.',
+    limitations: 'Administrative complaint data; focuses on financial fraud rather than platonic misrepresentation.',
+    directUrl: 'https://www.ftc.gov/news-events/data-visualizations/data-spotlight/2023/02/romance-scammers-favorite-lies-exposed',
+    confidenceLevel: 'Strong',
+    confidenceJustification: 'Official United States federal regulatory consumer protection data.',
+  },
+];
+
+export const TOP_PROBLEMS: ProblemItem[] = [
+  {
+    id: 'prob-1-superficial-signals',
+    number: 1,
+    title: 'Superficial Judgments and Poor Compatibility Signals',
+    tagline: 'When photo-centric browsing commodifies humans into fast-scrolling catalog items.',
+    shortExplanation:
+      'Existing platforms prioritize curated appearance and rapid swipe mechanics, making it difficult to assess shared passions, communication pacing, and authentic intentions.',
+    detailedExplanation:
+      'The prevailing design architecture of modern discovery apps relies on image-dominant cards and split-second affirmative/negative gestures. As demonstrated by Finkel et al. (2012) and Heino et al. (2010), this creates a "marketplace mindset" where human beings are evaluated like retail goods. Static profiles fail to convey dynamic relational compatibility, while infinite swipe queues induce choice overload (Iyengar & Lepper, 2000), reducing decision satisfaction and devaluing potential connections.',
+    evidenceSummary:
+      'Peer-reviewed psychological science shows that comparative profile grids encourage superficial attribute filtering rather than relational evaluation, and infinite choice options demotivate meaningful commitment.',
+    keyStatistic: 'Zero empirical evidence that static attribute questionnaires predict dyadic relationship success (Finkel et al., 2012)',
+    statisticContext: 'Extensive psychological review of commercial matching claims across multiple decades of data.',
+    confidenceLevel: 'Strong',
+    confidenceJustification:
+      'Supported by foundational literature in psychological science (APS), social psychology, and consumer decision-making.',
+    whatEvidenceSupports: [
+      'Comparative browsing grids prompt economic "shopping" heuristics rather than interpersonal empathy.',
+      'Extensive choice sets (infinite queues) decrease post-choice commitment and increase decision fatigue.',
+      'Static profile attributes are poor predictors of dynamic relational chemistry.',
+    ],
+    whatEvidenceDoesNotEstablish: [
+      'Does NOT prove that physical attractiveness has zero role in human attraction.',
+      'Does NOT prove that two people who meet via photo-centric apps can never have a successful, loving bond.',
+      'Distinguishes between interface-induced heuristics and innate human relational preferences.',
+    ],
+    affectedGroups: [
+      'People with niche intellectual, artistic, or outdoor passions.',
+      'Introverted or shy individuals who express themselves through conversation and projects rather than posed photography.',
+      'Neurodivergent individuals who find superficial social cues draining or alienating.',
+    ],
+    designImplications: [
+      'Replace photo-first carousels with shared-interest and core-value anchors.',
+      'Introduce transparent 40/30/20/10 compatibility explanations so users understand why they match.',
+      'Eliminate endless swipe feeds in favor of finite, curated daily discovery.',
+    ],
+    sourceIds: ['src-finkel-2012-critical', 'src-heino-2010-marketplace', 'src-iyengar-lepper-2000'],
+    baselineScores: {
+      severity: 4,
+      reach: 5,
+      evidenceStrength: 5,
+      opportunity: 5,
+    },
+    scoreRationale: {
+      severity: 'Significantly distorts how millions of people evaluate each other, creating systemic dissatisfaction.',
+      reach: 'Affects virtually all users of mainstream swipe-based social and dating applications.',
+      evidenceStrength: 'Backed by landmark meta-analyses in Psychological Science and Journal of Social and Personal Relationships.',
+      opportunity: 'High design opportunity: platforms can be intentionally designed around shared interests rather than photo grids.',
+    },
+  },
+  {
+    id: 'prob-2-ghosting-unwanted',
+    number: 2,
+    title: 'Ghosting, Rejection Pressure, and Unwanted Interactions',
+    tagline: 'When asymmetric communication creates anxiety, harassment, and silent disappearances.',
+    shortExplanation:
+      'Unsolicited direct messaging exposes users to harassment and unwanted advances, while the absence of structured exit mechanics normalizes ghosting and rejection anxiety.',
+    detailedExplanation:
+      'In traditional digital environments, opening a channel often invites unsolicited explicit messages, pressure to respond quickly, or persistent contact after disinterest is expressed. Pew Research Center (2023) documented that 48% of U.S. online daters experienced at least one form of unwanted contact, with women under 50 facing disproportionately high harassment. Concurrently, the psychological friction of direct rejection leads many participants to adopt "ghosting" (LeFebvre et al., 2019), leaving recipients with chronic ambiguity and social anxiety.',
+    evidenceSummary:
+      'Rigorous national demographic data confirms high rates of boundary violations (48% of daters), while psychological studies confirm ghosting is an avoidant coping mechanism driven by low-friction interface design.',
+    keyStatistic: '48% of U.S. online daters experienced ≥1 unwanted behavior; 56% of young women received unsolicited explicit content (Pew 2023)',
+    statisticContext: 'Probability-based, nationally representative survey of 6,034 U.S. adults conducted by Pew Research Center.',
+    confidenceLevel: 'Strong',
+    confidenceJustification:
+      'Pew Research Center probabilistic national survey combined with peer-reviewed qualitative research on digital communication dissolution.',
+    whatEvidenceSupports: [
+      'Unsolicited direct messaging systems expose women and marginalized groups to pervasive unwanted behavior.',
+      'Uncertainty about intentions and fear of hostile pushback incentivize avoidant communicative behavior (ghosting).',
+      'Asymmetric communication gates harm psychological safety and participation rates.',
+    ],
+    whatEvidenceDoesNotEstablish: [
+      'The 48% Pew statistic measures harassment and unwanted behaviors; it is NOT a ghosting metric.',
+      'Does NOT establish that all non-responders intend malice; many disengage due to cognitive exhaustion or safety concerns.',
+      'Findings reflect U.S. online daters and should not be blindly presumed identical in other global regions without local data.',
+    ],
+    affectedGroups: [
+      'Women and gender-diverse individuals who disproportionately shoulder harassment.',
+      'Socially anxious users who experience acute distress when ignored or subjected to aggressive messages.',
+      'Shy or cautious communicators who require low-pressure boundary guarantees to participate.',
+    ],
+    designImplications: [
+      'Implement strict mutual consent gates: conversations unlock only when both individuals say yes.',
+      'Provide quiet, penalty-free decline mechanics with zero public rejection counters or notifications.',
+      'Incorporate dignified, one-click connection pause and graceful disconnection tools.',
+    ],
+    sourceIds: ['src-pew-2023-unwanted', 'src-lefebvre-2019-ghosting'],
+    baselineScores: {
+      severity: 5,
+      reach: 5,
+      evidenceStrength: 5,
+      opportunity: 5,
+    },
+    scoreRationale: {
+      severity: 'Creates tangible psychological distress, harassment, and drives vulnerable demographics off platforms.',
+      reach: 'Documented among 48% of all online daters and a majority of young women in national polling.',
+      evidenceStrength: 'Gold-standard probabilistic survey data from Pew Research Center (2023).',
+      opportunity: 'Directly addressable via consent-first architecture, icebreaker context, and quiet disconnections.',
+    },
+  },
+  {
+    id: 'prob-3-limited-circles',
+    number: 3,
+    title: 'Limited Social Circles, Network Homophily & Social Pressure',
+    tagline: 'When meeting through friends and family restricts diversity and imposes social expectations.',
+    shortExplanation:
+      'Relying solely on existing friendship circles, family introductions, or workplace networks limits exposure to diverse people and creates awkward social baggage.',
+    detailedExplanation:
+      'Sociological research on homophily—the tendency for social ties to form between individuals who share similar sociodemographic and behavioral profiles—shows that existing social networks naturally reinforce themselves. As Linda Zhao (2023) demonstrated through longitudinal network modeling, initial network segregation actively perpetuates homophily over time. Furthermore, meeting through family or mutual friends introduces social scrutiny, obligation to be polite, and high stakes if a connection fails, making exploration risky for people with non-traditional lifestyles or niche interests.',
+    evidenceSummary:
+      'Empirical network science (Zhao 2023; McPherson et al. 2001) proves that closed social topologies naturally replicate homogeneity unless active bridging mechanisms intervene.',
+    keyStatistic: 'Longitudinal dynamic models show segregation actively reinforces ongoing network homophily (Zhao, 2023)',
+    statisticContext: 'Peer-reviewed stochastic actor-oriented network modeling published in Social Science Research.',
+    confidenceLevel: 'Strong',
+    confidenceJustification:
+      'Rigorous peer-reviewed longitudinal sociological network research on network formation dynamics.',
+    whatEvidenceSupports: [
+      'Existing social networks naturally reproduce similarity in background, ethnicity, and socioeconomic circles.',
+      'Passive physical proximity in schools or neighborhoods is insufficient to bridge insular peer groups without structured shared activities.',
+      'Introductions through mutual contacts entail social stakes that discourage experimental or low-pressure connection.',
+    ],
+    whatEvidenceDoesNotEstablish: [
+      'Does NOT imply that shared background or familial connections are inherently flawed or undesirable.',
+      'Does NOT establish that all friends-of-friends connections suffer from negative social pressure.',
+      'Separates structural network insularity from the positive trust-building benefits of personal referrals.',
+    ],
+    affectedGroups: [
+      'People who have recently moved to a new city, college, or job without existing social capital.',
+      'Individuals with niche, non-conforming hobbies or subcultural interests absent from their immediate family or neighborhood.',
+      'People seeking privacy away from family gossip or professional workplace politics.',
+    ],
+    designImplications: [
+      'Enable discovery across wider geographic and interest boundaries beyond immediate mutual contact graphs.',
+      'Maintain independent, user-controlled privacy settings to separate discovery from personal contact lists.',
+      'Ground introductions in shared personal passions rather than social pedigree.',
+    ],
+    sourceIds: ['src-zhao-2023-homophily'],
+    baselineScores: {
+      severity: 3,
+      reach: 4,
+      evidenceStrength: 4,
+      opportunity: 4,
+    },
+    scoreRationale: {
+      severity: 'Restricts personal growth and isolates individuals outside dominant social cliques, though less dangerous than active harassment.',
+      reach: 'Particularly acute for movers, college freshmen, immigrants, and people with specialized interests.',
+      evidenceStrength: 'Strong sociological and network theory foundation, with specific empirical modeling from Zhao (2023).',
+      opportunity: 'Interest-based digital discovery provides the exact cross-network bridge needed.',
+    },
+  },
+  {
+    id: 'prob-4-chance-barriers',
+    number: 4,
+    title: 'Unpredictability and Accessibility Barriers of Chance Encounters',
+    tagline: 'When relying on spontaneous serendipity excludes people facing mobility, time, or anxiety constraints.',
+    shortExplanation:
+      'Serendipitous "meet-cutes" in daily life depend heavily on physical location, financial resources, accessible public infrastructure, and social confidence.',
+    detailedExplanation:
+      'While romanticized in popular culture, chance encounters are fundamentally unpredictable and systematically inaccessible to large segments of the population. The U.S. Surgeon General’s 2023 Advisory on Loneliness underscored that physical civic spaces ("third places") have undergone decades of decline, diminishing informal gathering opportunities. Furthermore, individuals with physical disabilities, sensory sensitivities, limited financial budgets for nightlife/dining, caregiving duties, or acute social anxiety find spontaneous approaches intimidating or physically inaccessible.',
+    evidenceSummary:
+      'The U.S. Surgeon General’s Advisory (2023) documents the structural decay of public community infrastructure, while accessibility research demonstrates that serendipity requires physical, financial, and temporal privileges.',
+    keyStatistic: 'Severe social disconnection carries health risks comparable to smoking up to 15 cigarettes daily (Surgeon General, 2023)',
+    statisticContext: 'Epidemiological synthesis across global longitudinal cohorts in the U.S. Department of Health and Human Services Advisory.',
+    confidenceLevel: 'Strong',
+    confidenceJustification:
+      'Federal public health advisory synthesizing decades of public infrastructure and social disconnection metrics.',
+    whatEvidenceSupports: [
+      'Decline of physical gathering spaces makes chance encounters increasingly rare and inequitably distributed.',
+      'Spontaneous in-person social initiation carries high barrier-to-entry for individuals with mobility, financial, or anxiety constraints.',
+      'Digital discovery is essential as a bridge to, rather than replacement for, comfortable in-person connection.',
+    ],
+    whatEvidenceDoesNotEstablish: [
+      'The Surgeon General advisory does NOT calculate the exact percentage failure rate of chance encounters.',
+      'Does NOT establish that chance encounters should be eliminated; rather proves they cannot be the sole mechanism for community formation.',
+      'Must distinguish broader epidemiological loneliness data from specific chance encounter probabilities.',
+    ],
+    affectedGroups: [
+      'People with physical disabilities, chronic illness, or mobility limitations.',
+      'Introverted or socially anxious individuals who freeze during impromptu stranger approaches.',
+      'Working-class individuals with demanding schedules or limited discretionary spending for social venues.',
+    ],
+    designImplications: [
+      'Provide asynchronous, thoughtful introduction pacing so users can connect without real-time pressure.',
+      'Allow users to declare their social energy battery and communication pace upfront.',
+      'Focus initial interactions on low-cost, accessible shared activities (e.g., walking trails, book discussions, community gardens).',
+    ],
+    sourceIds: ['src-surgeon-general-2023'],
+    baselineScores: {
+      severity: 4,
+      reach: 4,
+      evidenceStrength: 4,
+      opportunity: 4,
+    },
+    scoreRationale: {
+      severity: 'High: Contributes directly to the chronic public health loneliness epidemic documented by HHS.',
+      reach: 'Affects introverts, neurodivergent individuals, disabled populations, and busy working adults.',
+      evidenceStrength: 'High epidemiological consensus on social disconnection, though exact chance encounter micro-data is qualitative.',
+      opportunity: 'Asynchronous digital discovery removes the physical spontaneity hurdle.',
+    },
+  },
+  {
+    id: 'prob-5-trust-scams',
+    number: 5,
+    title: 'Trust Deficits, Suspected Scams, and Lack of Boundary Control',
+    tagline: 'When deceptive accounts, financial scams, and weak platform moderation breed cynicism.',
+    shortExplanation:
+      'Prevalent fraud, catfishing, commercial solicitation, and lack of transparent user control erode trust and make genuine people hesitant to participate.',
+    detailedExplanation:
+      'A platform cannot facilitate authentic human vulnerability when users fear exploitation. Pew Research Center (2023) found that over half (52%) of U.S. online daters believe they have encountered someone attempting to scam them. The Federal Trade Commission reported $1.3 billion lost to romance scams in 2022 alone. Beyond criminal fraud, users routinely encounter misleading self-representation, commercial solicitations (OnlyFans, crypto promos), and a profound lack of transparency regarding how platforms handle safety reports, causing defensive behavior and communication burnout.',
+    evidenceSummary:
+      'Federal regulatory complaint data (FTC 2023) documents over $1.3B in financial losses, while Pew (2023) reveals that a majority of users operate under defensive skepticism.',
+    keyStatistic: '52% of U.S. online daters believe they encountered a scam attempt (Pew 2023); $1.3B in FTC reported losses (2022)',
+    statisticContext: 'Pew Research national representative survey and FTC Consumer Sentinel Network enforcement records.',
+    confidenceLevel: 'Strong',
+    confidenceJustification:
+      'Backed by federal regulatory enforcement data (FTC) and national demographic opinion research (Pew).',
+    whatEvidenceSupports: [
+      'A majority of online daters operate with acute suspicion of fraud and deceptive identities.',
+      'Financial exploitation through digital romance and social connection is an established multi-billion dollar illicit industry.',
+      'Lack of clear boundary controls and opaque reporting mechanisms suppresses user willingness to share personal interests.',
+    ],
+    whatEvidenceDoesNotEstablish: [
+      'The 52% Pew finding represents user *perception* and subjective belief, not a confirmed forensic count of verified scammers.',
+      'Does NOT establish that all misrepresentation is financial fraud; much of it involves everyday catfishing or undisclosed intentions.',
+      'Distinguishes between organized syndicate fraud and informal intention ambiguity.',
+    ],
+    affectedGroups: [
+      'Older adults and newcomers who are frequently targeted by social engineering scams.',
+      'Cautious, privacy-conscious individuals who refuse to participate on platforms without strict safety verification.',
+      'Users who have previously suffered financial or emotional fraud.',
+    ],
+    designImplications: [
+      'Empower users with local boundary controls (profile pausing, granular visibility, one-click blocking).',
+      'Provide clear, audit-traceable reporting mechanisms with simulated local feedback for safety testing.',
+      'Eliminate commercial incentives and popularity gamification that attract spam bots.',
+    ],
+    sourceIds: ['src-pew-2023-scams', 'src-ftc-2023-scams'],
+    baselineScores: {
+      severity: 4,
+      reach: 4,
+      evidenceStrength: 4,
+      opportunity: 4,
+    },
+    scoreRationale: {
+      severity: 'Causes direct financial ruin in worst cases and widespread psychological cynicism in everyday cases.',
+      reach: '52% of online daters report subjective exposure, with $1.3B in aggregate documented losses.',
+      evidenceStrength: 'Strong federal regulatory records and national polling.',
+      opportunity: 'Safety-first design, consent gates, and non-commercial matching significantly mitigate bad actors.',
+    },
+  },
+];
+
+export const MEETING_METHODS: MeetingMethod[] = [
+  {
+    id: 'method-apps',
+    name: 'Dating and Social Apps',
+    tagline: 'High volume, geographic breadth, and convenience — crippled by gamified swiping and harassment.',
+    summary:
+      'Digital matchmaking platforms provide unprecedented access to thousands of local individuals, breaking geographic isolation. However, their reliance on appearance-first cards, monetization through artificial scarcity, and lack of consent gates produce severe decision fatigue, harassment, and lookism.',
+    advantages: [
+      'Vastly expands discovery beyond personal social circles or geographic neighborhoods.',
+      'High convenience: browse and discover on personal schedule asynchronously.',
+      'Allows intentional filtering by age, distance, and basic lifestyle attributes.',
+    ],
+    limitations: [
+      'Superficial photo-first impressions induce commodification and marketplace evaluation habits (Finkel et al., 2012).',
+      'Unsolicited direct messaging generates high harassment and boundary violations (48% in Pew 2023).',
+      'Infinite choices trigger decision fatigue and reluctance to invest in any one person (Iyengar & Lepper, 2000).',
+      'Widespread ghosting and intention ambiguity leave users exhausted and cynical.',
+    ],
+    whoIsLeftOut: [
+      'Introverted or shy individuals uncomfortable with photo-centric appraisal.',
+      'People with niche passions who get lost in generic popularity-driven algorithms.',
+      'Women and gender-diverse individuals seeking safety from unsolicited sexual messages.',
+    ],
+    supportingEvidenceSummary:
+      'Pew Research Center (2023) documents 48% unwanted contact rates; Finkel et al. (2012) demonstrates absence of empirical support for algorithmic matching; Heino et al. (2010) identifies marketplace cognitive framing.',
+    keySourceIds: ['src-pew-2023-unwanted', 'src-finkel-2012-critical', 'src-heino-2010-marketplace'],
+    improvementOpportunities: [
+      'Switch from appearance-first swiping to interest-and-value first discovery.',
+      'Implement a strict mutual consent gate before messaging opens.',
+      'Provide explainable, transparent 40/30/20/10 compatibility metrics.',
+    ],
+  },
+  {
+    id: 'method-friends-family',
+    name: 'Friends and Family Introductions',
+    tagline: 'High baseline trust and personal vetting — constrained by closed networks and social expectations.',
+    summary:
+      'Meeting through mutual acquaintances, college friends, or family offers pre-existing trust, organic social context, and safety validation. However, it severely limits choices to homogeneous circles, exposes participants to social pressure, and creates awkward stakes if things fail.',
+    advantages: [
+      'Built-in safety verification and mutual accountability through trusted intermediaries.',
+      'Shared cultural context, mutual friends, and organic conversation starters.',
+      'Lower fraud and misrepresentation risks due to real-world reputational consequences.',
+    ],
+    limitations: [
+      'Network homophily structurally limits diversity and new perspectives (Zhao, 2023; McPherson et al., 2001).',
+      'Social pressure: awkwardness and privacy loss within mutual friend groups if a connection does not work out.',
+      'Dependency: users can only meet people if their friends or family have compatible contacts.',
+      'Inaccessible to geographic newcomers, immigrants, or people with unconventional lifestyles.',
+    ],
+    whoIsLeftOut: [
+      'People who recently relocated to a new city or country without an existing network.',
+      'Individuals whose families or peer groups hold different values or social views.',
+      'People with specialized hobbies (e.g. analog photography, climbing) not shared by their current circle.',
+    ],
+    supportingEvidenceSummary:
+      'Linda Zhao (2023, Social Science Research) proves initial network segregation naturally perpetuates homophily over time; McPherson et al. (2001) confirms birds-of-a-feather structural limits.',
+    keySourceIds: ['src-zhao-2023-homophily'],
+    improvementOpportunities: [
+      'Bridge people beyond their immediate social cliques while maintaining the safe, comfortable vibe of trusted intros.',
+      'Provide privacy controls that let people connect without alerting their personal mutual networks.',
+    ],
+  },
+  {
+    id: 'method-chance-encounters',
+    name: 'Chance Encounters in Daily Life',
+    tagline: 'Organic chemistry, shared context, and serendipity — crippled by unpredictability and access barriers.',
+    summary:
+      'Spontaneous interactions at coffee shops, parks, bookstores, or transit allow real-world organic assessment of body language, voice, and spontaneous charm. However, chance encounters are erratic, declining due to civic space erosion, and structurally inaccessible to those with anxiety or mobility constraints.',
+    advantages: [
+      'Immediate real-world chemistry check (voice, cadence, body language) with zero digital misrepresentation.',
+      'Grounding in a shared physical environment or shared spontaneous moment.',
+      'No digital digital exhaustion, swiping, or screen fatigue.',
+    ],
+    limitations: [
+      'Completely unpredictable: depends on timing, luck, and geographic happenstance.',
+      'Severe decline in community infrastructure and "third places" (U.S. Surgeon General, 2023).',
+      'High social anxiety hurdle: initiating conversation with a complete stranger is intimidating for most people.',
+      'Intention blindness: zero foreknowledge of whether the other person is single, looking for friends, or wants to be left alone.',
+    ],
+    whoIsLeftOut: [
+      'People with physical disabilities, mobility impairments, or chronic fatigue.',
+      'Introverted, socially anxious, or neurodivergent individuals.',
+      'People with tight financial budgets or demanding work/caregiver hours who cannot spend evenings at third places.',
+    ],
+    supportingEvidenceSummary:
+      'U.S. Surgeon General’s Advisory on Loneliness and Isolation (2023) documents civic infrastructure decline and the public health toll of social isolation.',
+    keySourceIds: ['src-surgeon-general-2023'],
+    improvementOpportunities: [
+      'Use digital discovery as a low-pressure prep tool for real-world activity meetups (e.g., ceramics, bouldering, book clubs).',
+      'Eliminate intention guesswork by displaying connection goals upfront.',
+    ],
+  },
+  {
+    id: 'method-online-communities',
+    name: 'Online Communities & Forums',
+    tagline: 'Niche passions and shared topics — undermined by geographic dispersion and lack of safety gates.',
+    summary:
+      'Subreddits, Discord servers, gaming guilds, and hobby message boards excel at connecting people around hyper-specific passions regardless of distance. However, they lack localized meeting structures, suffer from inconsistent moderation, and make transition to real-life relationships difficult.',
+    advantages: [
+      'Exceptional depth of shared interest discovery (e.g. modular synthesizers, fantasy fiction, urban sketching).',
+      'Focus on ideas and shared creative output rather than curated selfies.',
+      'Asynchronous, interest-grounded discussion eliminates split-second lookism.',
+    ],
+    limitations: [
+      'Geographic fragmentation: kindred spirits are often thousands of miles away across different time zones.',
+      'Unstructured direct messages: forum DMs frequently attract unmoderated harassment and spam.',
+      'Difficult transition: shifting from an anonymous forum username to a safe, trusted real-life friendship is awkward and risky.',
+      'High anonymity enables bad-faith misrepresentation and trolling.',
+    ],
+    whoIsLeftOut: [
+      'People seeking local, physical companions for weekend activities.',
+      'Users vulnerable to trolling or harassment in unmoderated open channels.',
+      'People who want intentional relationship discovery rather than open-ended public debate.',
+    ],
+    supportingEvidenceSummary:
+      'Literature on digital communities and pseudonymity shows strong interest alignment but significant barriers to offline conversion and localized trust verification.',
+    keySourceIds: ['src-finkel-2012-critical', 'src-pew-2023-scams'],
+    improvementOpportunities: [
+      'Combine the interest-rich depth of online communities with localized geographic proximity.',
+      'Add consent gates so forum-style interest alignment doesn’t degrade into unsolicited direct messaging.',
+    ],
+  },
+];
+
+export const SOLUTION_BRIDGE_ITEMS: SolutionBridgeItem[] = [
+  {
+    id: 'bridge-1',
+    problemTitle: 'Unsolicited Messages and Harassment',
+    evidenceSummary: '48% of U.S. online daters encounter unwanted contact or harassment (Pew 2023).',
+    affectedGroup: 'Women, LGBTQ+ individuals, and safety-conscious introverts (Module 2 Focus).',
+    userNeedToInvestigate: 'Users need total control over who can message them and when conversations begin.',
+    designOpportunity: 'A strict two-way mutual introduction system with context-aware icebreakers.',
+    commonGroundFeature: 'Consent-Locked Conversation Gate: Direct messaging remains disabled until both parties explicitly accept an introduction.',
+    testableQuestion: 'Do users feel safer and more comfortable initiating contact when messages cannot be sent without prior mutual consent?',
+  },
+  {
+    id: 'bridge-2',
+    problemTitle: 'Superficial Photo-First Evaluation & Lookism',
+    evidenceSummary: 'Photo-dominant grids induce a transactional "marketplace mindset" (Heino 2010; Finkel 2012).',
+    affectedGroup: 'Shy people, creative hobbyists, and individuals who do not fit narrow aesthetic conventions.',
+    userNeedToInvestigate: 'Users need a way to evaluate compatibility based on shared activities, values, and humor rather than curated selfies.',
+    designOpportunity: 'Interest-first profile architecture with transparent compatibility explanations.',
+    commonGroundFeature: 'Explainable 40/30/20/10 Matching Algorithm: Profiles lead with shared activities (40%), intentions (30%), values (20%), and communication pace (10%).',
+    testableQuestion: 'Does displaying transparent compatibility breakdowns increase conversation quality and reduce rapid profile swiping?',
+  },
+  {
+    id: 'bridge-3',
+    problemTitle: 'Social Anxiety and Rejection Fears (Ghosting)',
+    evidenceSummary: 'Ghosting is driven by avoidance of confrontation, causing ambiguity and social distress (LeFebvre 2019).',
+    affectedGroup: 'Socially anxious people, neurodivergent individuals, and users with low social energy batteries.',
+    userNeedToInvestigate: 'Users need low-pressure ways to decline or pause interactions without feeling guilty or confronting hostile reactions.',
+    designOpportunity: 'Quiet decline mechanics with zero public rejection counters or notifications.',
+    commonGroundFeature: 'Quiet Decline & Pause Mode: Declining an invitation sends no rejection notice and updates no public ledger. Users can also pause discovery with one click.',
+    testableQuestion: 'Does removing public rejection feedback and providing quiet declines increase willingness to send and receive introductions?',
+  },
+  {
+    id: 'bridge-4',
+    problemTitle: 'Closed Social Circles and Isolation After Relocation',
+    evidenceSummary: 'Network segregation naturally reinforces homophily and insularity over time (Zhao 2023).',
+    affectedGroup: 'College freshmen, newcomers moving to a new city, and people with niche hobbies.',
+    userNeedToInvestigate: 'Users need a safe bridge to kindred spirits outside their existing family or workplace circles.',
+    designOpportunity: 'Localized interest-based discovery that operates independently of personal contact address books.',
+    commonGroundFeature: 'Intentional Discovery Directory: Discover people in your local area filtered by shared activities (e.g. bouldering, ceramics, philosophy) without linking social media accounts.',
+    testableQuestion: 'Does interest-based tagging enable newcomers to form local friendship circles faster than relying on mutual acquaintance referrals?',
+  },
+  {
+    id: 'bridge-5',
+    problemTitle: 'Trust Deficits and Scam Suspicion',
+    evidenceSummary: '52% of daters suspect scam encounters (Pew 2023); $1.3B lost to romance fraud (FTC 2022).',
+    affectedGroup: 'Older adults, privacy-conscious daters, and users burned by previous deceptive encounters.',
+    userNeedToInvestigate: 'Users need transparent boundary enforcement, zero commercial ad manipulation, and clear reporting accountability.',
+    designOpportunity: 'Non-gamified safety center with local audit logs, instant blocking, and clear consent pledges.',
+    commonGroundFeature: 'Privacy & Safety Center: Granular visibility controls, instant profile hiding, and audit-traceable moderation reporting.',
+    testableQuestion: 'Does eliminating popularity rankings and providing transparent moderation logs increase user trust and authenticity?',
+  },
+];
+
+export const RESEARCH_GAPS: ResearchGap[] = [
+  {
+    id: 'gap-1-global-divergence',
+    title: 'Cross-Cultural & Global Divergence (e.g., India vs. United States)',
+    question: 'How do social discovery barriers differ in high-context, family-centric cultures like India compared to individualistic Western samples?',
+    currentEvidenceDeficit:
+      'Over 85% of cited empirical online dating and connection research (Pew, Finkel, LeFebvre) is grounded exclusively in U.S. and Western European populations. In India, arranged marriage infrastructure, multi-generational familial surveillance, and distinct gender-safety dynamics fundamentally reshape how people navigate meeting strangers.',
+    recommendedMethodology:
+      'Mixed-methods cross-cultural survey across urban Indian metros (Bengaluru, Delhi, Mumbai) paired with qualitative depth interviews exploring parental expectations and platonic connection taboos.',
+    targetDemographic: 'Urban Indian college students and young professionals seeking platonic vs. matrimonial connections.',
+  },
+  {
+    id: 'gap-2-college-transitions',
+    title: 'The College Freshman Transition Crisis',
+    question: 'Which specific structural barriers cause acute loneliness among first-year university students despite high physical proximity?',
+    currentEvidenceDeficit:
+      'While student loneliness is widely recognized, existing studies treat dorms as natural connection spaces without analyzing why dorm architecture and campus clique formation leave introverts feeling intensely isolated in crowded rooms.',
+    recommendedMethodology:
+      'Campus diary studies and semi-structured focus groups tracking first-semester students across Weeks 1, 6, and 12 of their transition.',
+    targetDemographic: 'First-generation and out-of-state college freshmen.',
+  },
+  {
+    id: 'gap-3-disability-accessibility',
+    title: 'Accessibility and Neurodiversity Barriers in Social Discovery',
+    question: 'How do individuals with physical disabilities, sensory processing differences, or autism experience existing discovery interfaces?',
+    currentEvidenceDeficit:
+      'Mainstream UX research rarely audits swipe interfaces for motor-impairment accessibility or cognitive overload. Literature on how autistic individuals navigate neurotypical conversational expectations online remains severely under-studied.',
+    recommendedMethodology:
+      'Participatory co-design workshops and usability audits with neurodivergent individuals and accessibility advocates.',
+    targetDemographic: 'Neurodivergent adults (ADHD, Autism) and individuals with physical mobility constraints.',
+  },
+  {
+    id: 'gap-4-friendship-vs-dating',
+    title: 'Platonic vs. Romantic Intentionality Divergence',
+    question: 'Do friendship-seeking users experience lower or higher rejection sensitivity compared to romance-seeking users?',
+    currentEvidenceDeficit:
+      'Most research pools all digital meeting under "online dating." Empirical evidence specifically investigating the unique dynamics of adult friendship formation apps (e.g. Bumble BFF) is sparse and preliminary.',
+    recommendedMethodology:
+      'A comparative A/B survey assessing rejection attribution and conversational dropout rates between platonic and romantic onboarding cohorts.',
+    targetDemographic: 'Adults actively seeking platonic companionship and activity partners.',
+  },
+  {
+    id: 'gap-5-affordability-transit',
+    title: 'Socioeconomic Constraints, Transit, and Third-Place Costs',
+    question: 'How do transportation deserts and financial barriers restrict in-person transition for compatible individuals?',
+    currentEvidenceDeficit:
+      'Most apps assume users have discretionary capital to buy drinks, coffee, or pay for rideshares. The impact of economic precarity on meeting someone new in physical space is rarely addressed in product design.',
+    recommendedMethodology:
+      'Demographic spatial analysis intersecting transit access data with user drop-off points prior to first in-person meetings.',
+    targetDemographic: 'Working-class youth and suburban/rural residents without personal vehicle access.',
+  },
+];
+
+export const INTERVIEW_QUESTIONS: InterviewQuestionItem[] = [
+  {
+    id: 'int-1',
+    number: 1,
+    question: 'When was the last time you met someone new and formed a genuine connection? How did it actually happen?',
+    researchRationale: 'Examines real-world behavioral pathways rather than idealized theories; identifies which meeting methods produce positive memories.',
+    whatToObserve: 'Listen for whether they highlight shared activities (classes, sports, hobbies) versus cold introductions or swipe matches.',
+  },
+  {
+    id: 'int-2',
+    number: 2,
+    question: 'What is the most emotionally exhausting or frustrating part of trying to meet new people today?',
+    researchRationale: 'Directly surfaces acute pain points: ghosting, superficial lookism, small talk burnout, or safety fears.',
+    whatToObserve: 'Notice emotional tone: do they express cynicism, anxiety, fear of harassment, or boredom with repetitive scripts?',
+  },
+  {
+    id: 'int-3',
+    number: 3,
+    question: 'Have you ever wanted to connect with someone (online or in person) but felt unable or uncomfortable initiating? What stopped you?',
+    researchRationale: 'Pinpoints specific friction points: fear of appearing creepy, fear of direct rejection, social anxiety, or lack of context.',
+    whatToObserve: 'Identify whether the friction was internal (shyness) or structural (no acceptable social script to reach out without looking awkward).',
+  },
+  {
+    id: 'int-4',
+    number: 4,
+    question: 'What specific signals make you trust someone when you first encounter them on a social platform?',
+    researchRationale: 'Identifies authentic trust vectors: detailed bios, mutual interests, verified badges, or conversational tone.',
+    whatToObserve: 'Contrast superficial popularity metrics (follower count, attractive photos) with substantive signals (shared values, conversational pace).',
+  },
+  {
+    id: 'int-5',
+    number: 5,
+    question: 'What makes you feel unsafe, overwhelmed, or uncomfortable on existing social or dating apps?',
+    researchRationale: 'Maps boundary violations and harassment triggers documented in Problem 2 and Problem 5.',
+    whatToObserve: 'Listen for mentions of unsolicited messages, pressure to respond quickly, aggressive follow-ups, or suspicious scam profiles.',
+  },
+  {
+    id: 'int-6',
+    number: 6,
+    question: 'Do shared interests and stated intentions matter more to you than profile appearance? Why or why not?',
+    researchRationale: 'Tests the core hypothesis of Module 1: whether users consciously crave interest-first discovery despite prevailing appearance-first markets.',
+    whatToObserve: 'Probe for nuance: do they value appearance for initial spark but acknowledge it fails to sustain conversation without shared passions?',
+  },
+  {
+    id: 'int-7',
+    number: 7,
+    question: 'If you could redesign how people meet from scratch, what one rule or boundary would you put in place to make it comfortable for everyone?',
+    researchRationale: 'Empowers the user to propose structural design solutions, informing Module 3 feature architecture.',
+    whatToObserve: 'Look for desires around mutual consent, mandatory icebreaker context, anti-ghosting closure tools, or pacing controls.',
+  },
+];
