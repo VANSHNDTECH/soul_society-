@@ -20,7 +20,7 @@ import {
   INITIAL_CONNECTIONS,
   INITIAL_MESSAGES,
 } from '../data/mockUsers';
-import { authService, AuthSession } from '../services/authService';
+import { authService, AuthSession, isProfileComplete } from '../services/authService';
 import { connectionService } from '../services/connectionService';
 import { chatService } from '../services/chatService';
 import { safetyService } from '../services/safetyService';
@@ -101,6 +101,8 @@ interface AppContextType {
   userRole: 'user' | 'editor' | 'moderator' | 'admin';
   refreshBackendData: () => Promise<void>;
   authSession: AuthSession;
+  isProfileComplete: boolean;
+  signOut: () => Promise<void>;
   authModalOpen: boolean;
   setAuthModalOpen: (open: boolean) => void;
   authModalPrompt: string;
@@ -173,11 +175,21 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         showToast(`Authentication required: Sign in to ${actionName}.`, 'warning');
         return false;
       }
+      if (!isProfileComplete(authSession.profile)) {
+        openAuthModal(`Please complete your profile before you ${actionName}.`);
+        showToast(`Profile completion required before you ${actionName}.`, 'warning');
+        return false;
+      }
       if (onAuthorized) onAuthorized();
       return true;
     },
-    [authSession.isAuthenticated, openAuthModal]
+    [authSession, openAuthModal]
   );
+
+  const signOut = useCallback(async () => {
+    await authService.signOut();
+    showToast('Signed out successfully. Protected platform features now require signing in.', 'info');
+  }, []);
 
   // Current user state: authenticated profile or guest visitor
   const [currentUser, setCurrentUser] = useState<User>(() => {
@@ -1049,6 +1061,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         userRole,
         refreshBackendData,
         authSession,
+        isProfileComplete: isProfileComplete(authSession.profile),
+        signOut,
         authModalOpen,
         setAuthModalOpen,
         authModalPrompt,

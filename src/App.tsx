@@ -7,6 +7,11 @@ import { AppModuleId } from './components/shared/ModuleNavigation';
 import { ResearchDashboard } from './components/research/ResearchDashboard';
 import { Module2Dashboard } from './components/module2/Module2Dashboard';
 import { Module3PrototypeView } from './components/Module3PrototypeView';
+import { SignInPage } from './components/auth/SignInPage';
+import { SignUpPage } from './components/auth/SignUpPage';
+import { ResetPasswordPage } from './components/auth/ResetPasswordPage';
+import { ProfileSetupPage } from './components/auth/ProfileSetupPage';
+import { ProtectedRoute } from './components/auth/ProtectedRoute';
 import { ResearchTab } from './types/research';
 import { Module2Tab } from './types/module2';
 
@@ -19,7 +24,20 @@ const AppShell: React.FC = () => {
     const path = location.pathname.toLowerCase();
     const hash = location.hash.toLowerCase();
     if (path.includes('module-2') || hash.includes('module-2')) return 'module-2';
-    if (path.includes('module-3') || hash.includes('module-3')) return 'module-3';
+    if (
+      path.includes('module-3') ||
+      hash.includes('module-3') ||
+      path.includes('discovery') ||
+      path.includes('chat') ||
+      path.includes('connections') ||
+      path.includes('requests') ||
+      path.includes('clearsignals') ||
+      path.includes('opensignals') ||
+      path.includes('safety') ||
+      path.includes('profile-setup')
+    ) {
+      return 'module-3';
+    }
     if (path.includes('module-1') || hash.includes('module-1')) return 'module-1';
     return 'module-1';
   };
@@ -31,23 +49,42 @@ const AppShell: React.FC = () => {
   const [module2Tab, setModule2Tab] = useState<Module2Tab>('overview');
   const [selectedPersonaId, setSelectedPersonaId] = useState<string>('persona-aanya');
 
-  // Update dynamic document title based on active module
+  // Update dynamic document title based on location
   useEffect(() => {
-    switch (activeModule) {
-      case 'module-1':
-        document.title = 'CommonGround — Module 1: The Problem Detective (Research & Evidence)';
-        break;
-      case 'module-2':
-        document.title = 'CommonGround — Module 2: The People Left Out (Personas & Barriers)';
-        break;
-      case 'module-3':
-        document.title = 'CommonGround — Module 3: The Solution Architect (Prototype & Solution)';
-        break;
-      default:
-        document.title = 'CommonGround — University Research Suite & Prototype';
-        break;
+    const path = location.pathname.toLowerCase();
+    if (path.includes('signin')) {
+      document.title = 'CommonGround — Sign In';
+    } else if (path.includes('signup')) {
+      document.title = 'CommonGround — Create Account';
+    } else if (path.includes('reset-password')) {
+      document.title = 'CommonGround — Reset Password';
+    } else if (path.includes('profile-setup')) {
+      document.title = 'CommonGround — Profile Setup';
+    } else if (path.includes('discovery')) {
+      document.title = 'CommonGround — Discover Peers';
+    } else if (path.includes('chat') || path.includes('connections')) {
+      document.title = 'CommonGround — Active Connections';
+    } else if (path.includes('clearsignals')) {
+      document.title = 'CommonGround — ClearSignals Assistant';
+    } else if (path.includes('opensignals')) {
+      document.title = 'CommonGround — OpenSignals Transparency';
+    } else {
+      switch (activeModule) {
+        case 'module-1':
+          document.title = 'CommonGround — Module 1: The Problem Detective (Research & Evidence)';
+          break;
+        case 'module-2':
+          document.title = 'CommonGround — Module 2: The People Left Out (Personas & Barriers)';
+          break;
+        case 'module-3':
+          document.title = 'CommonGround — Module 3: The Solution Architect (Prototype & Solution)';
+          break;
+        default:
+          document.title = 'CommonGround — University Research Suite & Prototype';
+          break;
+      }
     }
-  }, [activeModule]);
+  }, [activeModule, location.pathname]);
 
   const handleSelectModule = (id: AppModuleId) => {
     navigate(`/${id}`);
@@ -64,6 +101,8 @@ const AppShell: React.FC = () => {
     >
       <Routes>
         <Route path="/" element={<Navigate to="/module-1" replace />} />
+
+        {/* Public Module 1 & 2 Academic Research */}
         <Route
           path="/module-1"
           element={
@@ -90,7 +129,99 @@ const AppShell: React.FC = () => {
             />
           }
         />
+
+        {/* Dedicated Authentication Entry Points */}
+        <Route path="/signin" element={<SignInPage />} />
+        <Route path="/signup" element={<SignUpPage />} />
+        <Route path="/reset-password" element={<ResetPasswordPage />} />
+
+        {/* Required Profile Setup Flow */}
+        <Route
+          path="/profile-setup"
+          element={
+            <ProtectedRoute requireCompleteProfile={false}>
+              <ProfileSetupPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/onboarding"
+          element={
+            <ProtectedRoute requireCompleteProfile={false}>
+              <ProfileSetupPage />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Module 3 Hub */}
         <Route path="/module-3" element={<Module3PrototypeView />} />
+
+        {/* Direct URL Protection for Protected Features */}
+        <Route
+          path="/discovery"
+          element={
+            <ProtectedRoute requireCompleteProfile={true}>
+              <Module3PrototypeView directTab="discovery" />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/requests"
+          element={
+            <ProtectedRoute requireCompleteProfile={true}>
+              <Module3PrototypeView directTab="requests" />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/introductions"
+          element={
+            <ProtectedRoute requireCompleteProfile={true}>
+              <Module3PrototypeView directTab="requests" />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/chat"
+          element={
+            <ProtectedRoute requireCompleteProfile={true}>
+              <Module3PrototypeView directTab="chat" />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/connections"
+          element={
+            <ProtectedRoute requireCompleteProfile={true}>
+              <Module3PrototypeView directTab="chat" />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/clearsignals"
+          element={
+            <ProtectedRoute requireCompleteProfile={true}>
+              <Module3PrototypeView directTab="clearsignals" />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/opensignals"
+          element={
+            <ProtectedRoute requireCompleteProfile={true}>
+              <Module3PrototypeView directTab="opensignals" />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/safety"
+          element={
+            <ProtectedRoute requireCompleteProfile={false}>
+              <Module3PrototypeView directTab="safety" />
+            </ProtectedRoute>
+          }
+        />
+
         <Route path="*" element={<Navigate to="/module-1" replace />} />
       </Routes>
     </AppLayout>

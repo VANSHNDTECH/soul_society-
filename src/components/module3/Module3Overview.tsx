@@ -152,7 +152,13 @@ export const Module3Overview: React.FC<Module3OverviewProps> = ({ onNavigateTab 
           {/* Primary Action Buttons */}
           <div className="pt-4 flex flex-wrap items-center gap-3">
             <button
-              onClick={() => onNavigateTab('discovery')}
+              onClick={() => {
+                if (!authSession.isAuthenticated) {
+                  openAuthModal('Sign in or register to enter the protected discovery space.');
+                } else {
+                  onNavigateTab('discovery');
+                }
+              }}
               className="px-5 py-2.5 rounded-xl bg-teal-500 hover:bg-teal-400 text-stone-950 font-bold text-xs flex items-center gap-2 transition-colors shadow-sm"
             >
               <Compass className="w-4 h-4" />
@@ -160,7 +166,13 @@ export const Module3Overview: React.FC<Module3OverviewProps> = ({ onNavigateTab 
               <ArrowRight className="w-3.5 h-3.5" />
             </button>
             <button
-              onClick={() => onNavigateTab('opensignals')}
+              onClick={() => {
+                if (!authSession.isAuthenticated) {
+                  openAuthModal('Sign in to view personalized OpenSignals transparency factors.');
+                } else {
+                  onNavigateTab('opensignals');
+                }
+              }}
               className="px-5 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white font-semibold text-xs flex items-center gap-2 transition-colors border border-white/20"
             >
               <Eye className="w-4 h-4 text-teal-300" />
@@ -186,19 +198,27 @@ export const Module3Overview: React.FC<Module3OverviewProps> = ({ onNavigateTab 
             </div>
             <div className="space-y-1">
               <h3 className="font-heading font-bold text-sm text-stone-900 dark:text-stone-100">
-                You are viewing CommonGround in Visitor Mode
+                You are viewing CommonGround in Public Visitor Mode
               </h3>
               <p className="text-xs text-stone-600 dark:text-stone-400 leading-relaxed max-w-2xl">
-                You can freely browse discovery profiles, inspect research criteria, and view the OpenSignals transparency panel. To send introductions, chat, or customize your profile, sign in or create an account.
+                Module 1 (Research Evidence) and Module 2 (User Personas) are open access. To access protected platform features — including peer discovery, mutual introductions, consent-locked chat, and OpenSignals — please sign in or register.
               </p>
             </div>
           </div>
-          <button
-            onClick={() => openAuthModal('Please sign in or create an account to start connecting.')}
-            className="px-4 py-2 bg-stone-900 dark:bg-white text-white dark:text-stone-950 text-xs font-bold rounded-xl hover:bg-stone-800 dark:hover:bg-stone-100 transition-colors shrink-0 shadow-xs"
-          >
-            Sign In or Register
-          </button>
+          <div className="flex items-center gap-2 shrink-0">
+            <button
+              onClick={() => openAuthModal('Sign in to access your verified profile and connections.')}
+              className="px-4 py-2 bg-white dark:bg-stone-800 text-stone-800 dark:text-stone-200 border border-stone-300 dark:border-stone-700 text-xs font-bold rounded-xl hover:bg-stone-50 dark:hover:bg-stone-700 transition-colors shadow-2xs"
+            >
+              Sign In
+            </button>
+            <button
+              onClick={() => openAuthModal('Create an account to join CommonGround.')}
+              className="px-4 py-2 bg-teal-800 dark:bg-teal-600 text-white text-xs font-bold rounded-xl hover:bg-teal-900 dark:hover:bg-teal-500 transition-colors shadow-xs"
+            >
+              Create Account
+            </button>
+          </div>
         </section>
       )}
 

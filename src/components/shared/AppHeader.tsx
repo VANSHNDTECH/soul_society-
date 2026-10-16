@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { AppModuleId, ModuleNavigation } from './ModuleNavigation';
 import { ResearchTab } from '../../types/research';
 import { Module2Tab } from '../../types/module2';
@@ -30,6 +31,8 @@ import {
   Sparkles,
   Sliders,
   LogIn,
+  UserPlus,
+  LogOut,
 } from 'lucide-react';
 
 interface AppHeaderProps {
@@ -54,6 +57,7 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
   setModule2Tab,
   onOpenPresentation,
 }) => {
+  const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const {
     activeTab: module3Tab,
@@ -68,7 +72,13 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
     setAuthModalOpen,
     authModalPrompt,
     openAuthModal,
+    signOut,
   } = useApp();
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate('/module-1');
+  };
 
   const pendingIncomingCount = introductions.filter(
     (i) => i.toUserId === currentUser?.id && i.status === 'pending'
@@ -153,7 +163,7 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
           </div>
 
           {/* Desktop Global Module Navigation */}
-          <div className="hidden md:flex items-center justify-center flex-1 max-w-3xl">
+          <div className="hidden md:flex items-center justify-center flex-1 max-w-2xl">
             <ModuleNavigation
               activeModule={activeModule}
               onSelectModule={onSelectModule}
@@ -168,17 +178,17 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
             {/* Global Academic Project Defense Modal Button */}
             <button
               onClick={handlePresentationClick}
-              className="flex items-center gap-1.5 bg-white dark:bg-stone-800 hover:bg-stone-50 dark:hover:bg-stone-700 text-stone-800 dark:text-stone-200 border border-stone-200/90 dark:border-stone-700 text-xs font-semibold px-2.5 py-1.5 rounded-xl transition-all shadow-2xs"
+              className="hidden lg:flex items-center gap-1.5 bg-white dark:bg-stone-800 hover:bg-stone-50 dark:hover:bg-stone-700 text-stone-800 dark:text-stone-200 border border-stone-200/90 dark:border-stone-700 text-xs font-semibold px-2.5 py-1.5 rounded-xl transition-all shadow-2xs"
               title="Open Academic Project Defense & Research Rationale"
             >
               <GraduationCap className="w-4 h-4 text-purple-700 dark:text-purple-400" />
-              <span className="hidden xl:inline">Project Defense</span>
+              <span>Project Defense</span>
             </button>
 
             {/* Database status pill */}
             <button
               onClick={() => openAuthModal()}
-              className={`hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border transition-all ${
+              className={`hidden xl:flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border transition-all ${
                 isSupabaseConfigured()
                   ? 'bg-emerald-50 dark:bg-emerald-950/40 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 text-emerald-800 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800'
                   : 'bg-amber-50 dark:bg-amber-950/40 hover:bg-amber-100 dark:hover:bg-amber-900/40 text-amber-800 dark:text-amber-300 border-amber-200 dark:border-amber-800'
@@ -186,41 +196,65 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
               title={isSupabaseConfigured() ? 'Supabase PostgreSQL Database Connected' : 'Running in Local Demonstration Mode - Click to Manage Session'}
             >
               <div className={`w-2 h-2 rounded-full ${isSupabaseConfigured() ? 'bg-emerald-500 animate-pulse' : 'bg-amber-500'}`} />
-              <span className="hidden md:inline">{isSupabaseConfigured() ? 'Live Database' : 'Demo Mode'}</span>
+              <span>{isSupabaseConfigured() ? 'Live Database' : 'Demo Mode'}</span>
             </button>
 
-            {/* User Account / Profile Button */}
-            <button
-              onClick={() => openAuthModal()}
-              className={`flex items-center gap-1.5 pl-1.5 pr-2.5 py-1 rounded-full border shadow-2xs transition-all ${
-                authSession.isAuthenticated
-                  ? 'border-stone-200/90 dark:border-stone-700 bg-white dark:bg-stone-800 hover:border-teal-400 dark:hover:border-teal-500'
-                  : 'border-amber-200 dark:border-amber-800/80 bg-amber-50/70 dark:bg-amber-950/40 hover:bg-amber-100 dark:hover:bg-amber-900/40 text-amber-900 dark:text-amber-300'
-              }`}
-              title={authSession.isAuthenticated ? `Signed in as ${authSession.profile?.display_name || currentUser.name}` : 'Visitor Mode — Click to Sign In'}
-            >
-              {authSession.isAuthenticated ? (
-                <img
-                  src={authSession.profile?.avatar_url || currentUser?.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80'}
-                  alt="User"
-                  className="w-6 h-6 rounded-full object-cover ring-1 ring-teal-500/30"
-                />
-              ) : (
-                <div className="w-6 h-6 rounded-full bg-amber-200 dark:bg-amber-900/80 flex items-center justify-center text-amber-800 dark:text-amber-200">
-                  <LogIn className="w-3.5 h-3.5" />
-                </div>
-              )}
-              <span className="text-xs font-medium text-stone-800 dark:text-stone-200 hidden sm:inline max-w-[85px] truncate">
-                {authSession.isAuthenticated
-                  ? (authSession.profile?.display_name || currentUser?.name?.split(' ')[0])
-                  : 'Sign In'}
-              </span>
-              {!authSession.isAuthenticated && (
-                <span className="hidden lg:inline text-[9px] uppercase font-bold tracking-wide bg-amber-200/80 dark:bg-amber-900/60 text-amber-800 dark:text-amber-300 px-1 rounded">
-                  Guest
-                </span>
-              )}
-            </button>
+            {/* Authentication Navigation Controls */}
+            {!authSession.isAuthenticated ? (
+              <div className="flex items-center gap-1.5 shrink-0">
+                <Link
+                  to="/signin"
+                  id="nav-signin-btn"
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-800 hover:border-teal-500 text-stone-800 dark:text-stone-200 text-xs font-semibold shadow-2xs hover:shadow-xs transition"
+                  title="Sign in with your email and password"
+                >
+                  <LogIn className="w-3.5 h-3.5 text-teal-600 dark:text-teal-400" />
+                  <span>Sign In</span>
+                </Link>
+                <Link
+                  to="/signup"
+                  id="nav-signup-btn"
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-teal-800 hover:bg-teal-900 dark:bg-teal-600 dark:hover:bg-teal-500 text-white text-xs font-bold shadow-xs transition"
+                  title="Create a new CommonGround account"
+                >
+                  <UserPlus className="w-3.5 h-3.5" />
+                  <span className="hidden sm:inline">Create Account</span>
+                  <span className="sm:hidden">Join</span>
+                </Link>
+              </div>
+            ) : (
+              <div className="flex items-center gap-1.5 shrink-0">
+                <button
+                  onClick={() => openAuthModal()}
+                  id="nav-user-profile-btn"
+                  className="flex items-center gap-2 pl-1.5 pr-2.5 py-1 rounded-full border border-stone-200/90 dark:border-stone-700 bg-white dark:bg-stone-800 hover:border-teal-400 dark:hover:border-teal-500 text-stone-800 dark:text-stone-200 shadow-2xs transition"
+                  title={`Signed in as ${authSession.profile?.display_name || 'Member'} — Click to view session details`}
+                >
+                  <img
+                    src={authSession.profile?.avatar_url || currentUser?.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80'}
+                    alt="User"
+                    className="w-6 h-6 rounded-full object-cover ring-1 ring-teal-500/30"
+                  />
+                  <span className="text-xs font-semibold text-stone-900 dark:text-stone-100 max-w-[85px] truncate hidden sm:inline">
+                    {authSession.profile?.display_name || currentUser?.name?.split(' ')[0] || 'Member'}
+                  </span>
+                  {authSession.isDemoSession && (
+                    <span className="text-[9px] uppercase font-bold tracking-wider bg-purple-100 dark:bg-purple-950/60 text-purple-800 dark:text-purple-300 px-1 rounded hidden md:inline">
+                      Demo
+                    </span>
+                  )}
+                </button>
+                <button
+                  onClick={handleSignOut}
+                  id="nav-signout-btn"
+                  className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-stone-600 dark:text-stone-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 border border-stone-200 dark:border-stone-800 text-xs font-semibold transition"
+                  title="Sign out of CommonGround"
+                >
+                  <LogOut className="w-3.5 h-3.5" />
+                  <span className="hidden lg:inline">Sign Out</span>
+                </button>
+              </div>
+            )}
 
             {/* When on Module 3: Reset Demo Data */}
             {activeModule === 'module-3' && (
@@ -244,9 +278,9 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
           </div>
         </div>
 
-        {/* Mobile Dropdown Menu for Global Modules */}
+        {/* Mobile Dropdown Menu for Global Modules & Auth */}
         {mobileMenuOpen && (
-          <div className="md:hidden py-3 border-t border-stone-200/80 dark:border-stone-800 space-y-2">
+          <div className="md:hidden py-3 border-t border-stone-200/80 dark:border-stone-800 space-y-3">
             <span className="text-[10px] font-bold uppercase tracking-wider text-stone-400 block px-2">
               Select Module:
             </span>
@@ -259,6 +293,65 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
                 }}
                 className="flex-col items-stretch w-full"
               />
+            </div>
+
+            {/* Mobile Auth Options */}
+            <div className="pt-2 border-t border-stone-200/80 dark:border-stone-800 px-2 space-y-2">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-stone-400 block">
+                Account & Authentication:
+              </span>
+              {!authSession.isAuthenticated ? (
+                <div className="grid grid-cols-2 gap-2">
+                  <Link
+                    to="/signin"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl border border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-800 text-xs font-semibold text-stone-800 dark:text-stone-200"
+                  >
+                    <LogIn className="w-3.5 h-3.5 text-teal-600" />
+                    <span>Sign In</span>
+                  </Link>
+                  <Link
+                    to="/signup"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-teal-800 text-white text-xs font-bold"
+                  >
+                    <UserPlus className="w-3.5 h-3.5" />
+                    <span>Create Account</span>
+                  </Link>
+                </div>
+              ) : (
+                <div className="flex items-center justify-between p-2 rounded-xl bg-stone-100 dark:bg-stone-800">
+                  <button
+                    onClick={() => {
+                      openAuthModal();
+                      setMobileMenuOpen(false);
+                    }}
+                    className="flex items-center gap-2 text-xs font-semibold text-stone-800 dark:text-stone-200 text-left"
+                  >
+                    <img
+                      src={authSession.profile?.avatar_url || currentUser?.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80'}
+                      alt="User"
+                      className="w-6 h-6 rounded-full object-cover"
+                    />
+                    <div>
+                      <p className="font-bold text-stone-900 dark:text-stone-100">
+                        {authSession.profile?.display_name || 'Member'}
+                      </p>
+                      <p className="text-[10px] text-stone-500">Manage Account</p>
+                    </div>
+                  </button>
+                  <button
+                    onClick={() => {
+                      handleSignOut();
+                      setMobileMenuOpen(false);
+                    }}
+                    className="flex items-center gap-1 text-xs font-semibold text-rose-600 dark:text-rose-400 px-2.5 py-1.5 rounded-lg border border-rose-200 dark:border-rose-800 bg-rose-50 dark:bg-rose-950/40"
+                  >
+                    <LogOut className="w-3.5 h-3.5" />
+                    <span>Sign Out</span>
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         )}
@@ -350,7 +443,13 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
                     return (
                       <button
                         key={tab.id}
-                        onClick={() => setModule3Tab(tab.id)}
+                        onClick={() => {
+                          if (tab.id !== 'overview' && !authSession.isAuthenticated) {
+                            navigate(`/signin?redirect=${encodeURIComponent(`/module-3?tab=${tab.id}`)}`);
+                            return;
+                          }
+                          setModule3Tab(tab.id);
+                        }}
                         className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold shrink-0 transition-all ${
                           isActive
                             ? 'bg-stone-900 dark:bg-stone-100 text-white dark:text-stone-950 shadow-xs'

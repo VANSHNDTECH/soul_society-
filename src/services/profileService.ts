@@ -35,11 +35,11 @@ export const profileService = {
     if (isSupabaseConfigured() && supabase) {
       const { data, error } = await supabase
         .from('profiles')
-        .update({
+        .upsert({
           ...updates,
+          id: userId,
           updated_at: new Date().toISOString(),
         })
-        .eq('id', userId)
         .select()
         .single();
 
