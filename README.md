@@ -3,6 +3,10 @@
 > **Human-Centered Design, Social Computing, and Ethical Technology Showcase**  
 > An evidence-informed investigation into modern social disconnection, the people excluded by current meeting paradigms, and an interactive consent-first prototype.
 
+🌐 **Live URL:** [https://commonground-p2ia.onrender.com/](https://commonground-p2ia.onrender.com/)
+
+---
+
 CommonGround is organized into three connected academic modules:
 
 1. 🔍 **Module 1: The Problem Detective** — Evidence-based diagnostic dashboard investigating the empirical failures of existing meeting methods (*"What is going wrong in how people meet, and for whom?"*).
