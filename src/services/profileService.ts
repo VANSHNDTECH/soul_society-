@@ -1,5 +1,13 @@
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import { DbProfile, DbInterest } from '../types/database';
+import { DEMO_PROFILES } from './authService';
+
+const localProfileStore = new Map<string, DbProfile>();
+
+// Seed initial profiles
+Object.values(DEMO_PROFILES).forEach(p => {
+  localProfileStore.set(p.id, p);
+});
 
 export const profileService = {
   async getProfile(userId: string): Promise<DbProfile | null> {
@@ -12,12 +20,12 @@ export const profileService = {
 
       if (error) {
         console.error('Error fetching profile:', error);
-        return null;
+      } else if (data) {
+        return data as DbProfile;
       }
-      return data as DbProfile;
     }
 
-    return null;
+    return localProfileStore.get(userId) || null;
   },
 
   async updateProfile(userId: string, updates: Partial<DbProfile>): Promise<{
@@ -38,21 +46,32 @@ export const profileService = {
       if (error) {
         return { profile: null, error: error.message };
       }
-      return { profile: data as DbProfile, error: null };
+      if (data) {
+        localProfileStore.set(userId, data as DbProfile);
+        return { profile: data as DbProfile, error: null };
+      }
     }
 
+    const existing = localProfileStore.get(userId) || {
+      id: userId,
+      display_name: updates.display_name || 'User',
+      role: 'user',
+      intentions: updates.intentions || ['Friendship'],
+      discovery_enabled: updates.discovery_enabled ?? true,
+      profile_visibility: updates.profile_visibility || 'standard',
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    } as DbProfile;
+
+    const merged: DbProfile = {
+      ...existing,
+      ...updates,
+      updated_at: new Date().toISOString(),
+    };
+    localProfileStore.set(userId, merged);
+
     return {
-      profile: {
-        id: userId,
-        display_name: updates.display_name || 'User',
-        role: 'user',
-        intentions: updates.intentions || ['Friendship'],
-        discovery_enabled: updates.discovery_enabled ?? true,
-        profile_visibility: updates.profile_visibility || 'standard',
-        ...updates,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      } as DbProfile,
+      profile: merged,
       error: null,
     };
   },

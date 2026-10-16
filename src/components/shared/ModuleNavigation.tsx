@@ -87,8 +87,8 @@ export const ModuleNavigation: React.FC<ModuleNavigationProps> = ({
                 : 'px-3 py-2 sm:px-3.5 sm:py-2'
             } ${
               isActive
-                ? `bg-white shadow-xs border ${item.activeBorder} ring-1 ${item.activeBorder}/30`
-                : 'border border-transparent hover:bg-stone-200/50 hover:border-stone-300/60 text-stone-600'
+                ? `bg-white dark:bg-stone-800/90 shadow-xs border ${item.activeBorder} ring-1 ${item.activeBorder}/30`
+                : 'border border-transparent hover:bg-stone-200/50 dark:hover:bg-stone-800/50 hover:border-stone-300/60 dark:hover:border-stone-700 text-stone-600 dark:text-stone-300'
             }`}
           >
             <div className="flex items-center gap-2.5">
@@ -97,7 +97,7 @@ export const ModuleNavigation: React.FC<ModuleNavigationProps> = ({
                 className={`w-6 h-6 rounded-lg text-[11px] font-mono font-bold flex items-center justify-center transition-colors shrink-0 ${
                   isActive
                     ? item.activeBadge
-                    : 'bg-stone-200/80 text-stone-600 group-hover:bg-stone-300'
+                    : 'bg-stone-200/80 dark:bg-stone-700 text-stone-600 dark:text-stone-300 group-hover:bg-stone-300 dark:group-hover:bg-stone-600'
                 }`}
               >
                 {item.number}
@@ -108,7 +108,7 @@ export const ModuleNavigation: React.FC<ModuleNavigationProps> = ({
                 <div className="flex items-center gap-1.5">
                   <span
                     className={`text-xs sm:text-xs font-bold tracking-tight truncate ${
-                      isActive ? 'text-stone-900 font-heading' : 'text-stone-700'
+                      isActive ? 'text-stone-900 dark:text-stone-100 font-heading' : 'text-stone-700 dark:text-stone-300'
                     }`}
                   >
                     {item.title}
@@ -122,7 +122,7 @@ export const ModuleNavigation: React.FC<ModuleNavigationProps> = ({
                 </div>
                 <div
                   className={`text-[10px] tracking-wide truncate ${
-                    isActive ? 'text-stone-500 font-medium' : 'text-stone-400'
+                    isActive ? 'text-stone-500 dark:text-stone-400 font-medium' : 'text-stone-400 dark:text-stone-500'
                   }`}
                 >
                   {item.subtitle}

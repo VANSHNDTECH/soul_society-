@@ -33,7 +33,7 @@ export const ReportModal: React.FC = () => {
 
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto bg-stone-900/60 backdrop-blur-xs flex items-center justify-center p-4">
-      <div className="relative bg-white rounded-3xl max-w-lg w-full shadow-2xl border border-stone-200 overflow-hidden text-left animate-in fade-in zoom-in-95 duration-200">
+      <div className="relative bg-white dark:bg-stone-900 rounded-3xl max-w-lg w-full shadow-2xl border border-stone-200 dark:border-stone-800 overflow-hidden text-left animate-in fade-in zoom-in-95 duration-200">
         {/* Header */}
         <div className="p-6 bg-gradient-to-r from-rose-900 to-stone-900 text-white flex items-start justify-between">
           <div className="flex items-center gap-3">
@@ -58,21 +58,21 @@ export const ReportModal: React.FC = () => {
 
         <form onSubmit={handleSubmit} className="p-6 space-y-5">
           {/* Target preview */}
-          <div className="flex items-center gap-3 p-3 bg-stone-50 rounded-xl border border-stone-200">
+          <div className="flex items-center gap-3 p-3 bg-stone-50 dark:bg-stone-800/60 rounded-xl border border-stone-200 dark:border-stone-800">
             <img
               src={reportTargetUser.avatar}
               alt={reportTargetUser.name}
               className="w-10 h-10 rounded-xl object-cover"
             />
             <div>
-              <h4 className="font-bold text-xs text-stone-900">{reportTargetUser.name}</h4>
-              <p className="text-[11px] text-stone-500">{reportTargetUser.headline}</p>
+              <h4 className="font-bold text-xs text-stone-900 dark:text-stone-100">{reportTargetUser.name}</h4>
+              <p className="text-[11px] text-stone-500 dark:text-stone-400">{reportTargetUser.headline}</p>
             </div>
           </div>
 
           {/* Reason Selection */}
           <div className="space-y-2">
-            <label className="block text-xs font-bold uppercase tracking-wider text-stone-700">
+            <label className="block text-xs font-bold uppercase tracking-wider text-stone-700 dark:text-stone-300">
               Select primary reason
             </label>
             <div className="space-y-1.5">
@@ -83,12 +83,12 @@ export const ReportModal: React.FC = () => {
                   onClick={() => setReason(r)}
                   className={`w-full p-2.5 rounded-xl border text-left text-xs transition-all flex items-center justify-between ${
                     reason === r
-                      ? 'border-rose-600 bg-rose-50/70 font-semibold text-rose-950'
-                      : 'border-stone-200 hover:border-stone-300 text-stone-700'
+                      ? 'border-rose-600 dark:border-rose-500 bg-rose-50/70 dark:bg-rose-950/50 font-semibold text-rose-950 dark:text-rose-200'
+                      : 'border-stone-200 dark:border-stone-800 hover:border-stone-300 dark:hover:border-stone-700 text-stone-700 dark:text-stone-300 bg-white dark:bg-stone-850'
                   }`}
                 >
                   <span>{r}</span>
-                  {reason === r && <Check className="w-4 h-4 text-rose-600" />}
+                  {reason === r && <Check className="w-4 h-4 text-rose-600 dark:text-rose-400" />}
                 </button>
               ))}
             </div>
@@ -96,7 +96,7 @@ export const ReportModal: React.FC = () => {
 
           {/* Additional details */}
           <div className="space-y-1.5">
-            <label className="block text-xs font-bold uppercase tracking-wider text-stone-700">
+            <label className="block text-xs font-bold uppercase tracking-wider text-stone-700 dark:text-stone-300">
               Context or comments (optional)
             </label>
             <textarea
@@ -104,25 +104,25 @@ export const ReportModal: React.FC = () => {
               value={details}
               onChange={e => setDetails(e.target.value)}
               placeholder="Describe what occurred or what felt uncomfortable..."
-              className="w-full p-3 rounded-xl border border-stone-200 text-xs focus:outline-none focus:ring-2 focus:ring-rose-500"
+              className="w-full p-3 rounded-xl border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-800 text-stone-900 dark:text-stone-100 placeholder-stone-400 dark:placeholder-stone-500 text-xs focus:outline-none focus:ring-2 focus:ring-rose-500"
             />
           </div>
 
           {/* Block Checkbox */}
-          <label className="flex items-center gap-3 p-3 rounded-xl bg-stone-50 border border-stone-200 cursor-pointer">
+          <label className="flex items-center gap-3 p-3 rounded-xl bg-stone-50 dark:bg-stone-800/60 border border-stone-200 dark:border-stone-800 cursor-pointer">
             <input
               type="checkbox"
               checked={alsoBlock}
               onChange={e => setAlsoBlock(e.target.checked)}
               className="w-4 h-4 text-rose-600 rounded focus:ring-rose-500"
             />
-            <span className="text-xs text-stone-800 font-medium">
+            <span className="text-xs text-stone-800 dark:text-stone-200 font-medium">
               Also block {reportTargetUser.name} immediately so they cannot discover me
             </span>
           </label>
 
           {/* Prototype disclaimer */}
-          <p className="text-[11px] text-stone-500 italic bg-amber-50 p-2.5 rounded-lg border border-amber-200">
+          <p className="text-[11px] text-stone-500 dark:text-amber-300/90 italic bg-amber-50 dark:bg-amber-950/40 p-2.5 rounded-lg border border-amber-200 dark:border-amber-800">
             Note: This demonstration prototype records your report locally in your Safety & Privacy Center to demonstrate moderation flows.
           </p>
 
@@ -131,7 +131,7 @@ export const ReportModal: React.FC = () => {
             <button
               type="button"
               onClick={() => setReportTargetUser(null)}
-              className="px-4 py-2 text-xs font-semibold text-stone-600 hover:text-stone-900 rounded-xl"
+              className="px-4 py-2 text-xs font-semibold text-stone-600 dark:text-stone-400 hover:text-stone-900 dark:hover:text-stone-100 rounded-xl"
             >
               Cancel
             </button>

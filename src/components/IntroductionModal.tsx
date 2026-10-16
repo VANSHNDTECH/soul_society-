@@ -45,9 +45,9 @@ const IntroductionDialogContent: React.FC<IntroductionDialogContentProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto bg-stone-900/60 backdrop-blur-xs flex items-center justify-center p-4">
-      <div className="relative bg-white rounded-3xl max-w-lg w-full shadow-2xl border border-stone-200 overflow-hidden text-left animate-in fade-in zoom-in-95 duration-200">
+      <div className="relative bg-white dark:bg-stone-900 rounded-3xl max-w-lg w-full shadow-2xl border border-stone-200 dark:border-stone-800 overflow-hidden text-left animate-in fade-in zoom-in-95 duration-200">
         {/* Header */}
-        <div className="p-6 bg-gradient-to-r from-stone-900 to-teal-950 text-white flex items-start justify-between">
+        <div className="p-6 bg-gradient-to-r from-stone-900 via-stone-800 to-teal-950 text-white flex items-start justify-between">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-2xl bg-teal-500/20 flex items-center justify-center text-teal-300">
               <HeartHandshake className="w-5 h-5" />
@@ -70,21 +70,21 @@ const IntroductionDialogContent: React.FC<IntroductionDialogContentProps> = ({
 
         <form onSubmit={handleSubmit} className="p-6 space-y-5">
           {/* Recipient summary */}
-          <div className="p-3.5 rounded-2xl bg-stone-50 border border-stone-200 flex items-center gap-3">
+          <div className="p-3.5 rounded-2xl bg-stone-50 dark:bg-stone-800/70 border border-stone-200 dark:border-stone-700 flex items-center gap-3">
             <img
               src={targetUser.avatar}
               alt={targetUser.name}
-              className="w-12 h-12 rounded-xl object-cover ring-1 ring-stone-200"
+              className="w-12 h-12 rounded-xl object-cover ring-1 ring-stone-200 dark:ring-stone-700"
             />
             <div className="flex-1">
-              <h3 className="text-sm font-bold text-stone-900">{targetUser.name}</h3>
-              <p className="text-xs text-stone-500 line-clamp-1">{targetUser.headline}</p>
+              <h3 className="text-sm font-bold text-stone-900 dark:text-stone-100">{targetUser.name}</h3>
+              <p className="text-xs text-stone-500 dark:text-stone-400 line-clamp-1">{targetUser.headline}</p>
               <div className="flex items-center gap-2 mt-1">
-                <span className="text-[10px] font-semibold text-teal-800 bg-teal-50 px-2 py-0.5 rounded-md">
+                <span className="text-[10px] font-semibold text-teal-800 dark:text-teal-300 bg-teal-50 dark:bg-teal-950/60 px-2 py-0.5 rounded-md">
                   {comp.totalScore}% Compatibility
                 </span>
                 {comp.sharedInterests.length > 0 && (
-                  <span className="text-[10px] text-stone-500">
+                  <span className="text-[10px] text-stone-500 dark:text-stone-400">
                     Mutual: {comp.sharedInterests.slice(0, 2).join(', ')}
                   </span>
                 )}
@@ -94,7 +94,7 @@ const IntroductionDialogContent: React.FC<IntroductionDialogContentProps> = ({
 
           {/* Suggested Icebreakers */}
           <div className="space-y-2">
-            <label className="block text-xs font-bold uppercase tracking-wider text-stone-700">
+            <label className="block text-xs font-bold uppercase tracking-wider text-stone-700 dark:text-stone-300">
               1. Choose a suggested icebreaker
             </label>
             <div className="space-y-2">
@@ -110,14 +110,14 @@ const IntroductionDialogContent: React.FC<IntroductionDialogContentProps> = ({
                     }}
                     className={`w-full p-3 rounded-xl border text-left text-xs transition-all ${
                       isSelected
-                        ? 'border-teal-600 bg-teal-50/70 text-teal-950 font-medium shadow-2xs'
-                        : 'border-stone-200 hover:border-stone-300 bg-white text-stone-700'
+                        ? 'border-teal-600 bg-teal-50/70 dark:bg-teal-950/40 text-teal-950 dark:text-teal-200 font-medium shadow-2xs'
+                        : 'border-stone-200 dark:border-stone-700 hover:border-stone-300 dark:hover:border-stone-600 bg-white dark:bg-stone-800 text-stone-700 dark:text-stone-300'
                     }`}
                   >
                     <div className="flex items-start gap-2">
                       <div
                         className={`w-4 h-4 rounded-full mt-0.5 flex items-center justify-center shrink-0 text-[10px] ${
-                          isSelected ? 'bg-teal-600 text-white' : 'border border-stone-300'
+                          isSelected ? 'bg-teal-600 text-white' : 'border border-stone-300 dark:border-stone-600'
                         }`}
                       >
                         {isSelected && <Check className="w-3 h-3" />}
@@ -133,10 +133,10 @@ const IntroductionDialogContent: React.FC<IntroductionDialogContentProps> = ({
           {/* Personalized Message Note */}
           <div className="space-y-1.5">
             <div className="flex items-center justify-between">
-              <label className="block text-xs font-bold uppercase tracking-wider text-stone-700">
+              <label className="block text-xs font-bold uppercase tracking-wider text-stone-700 dark:text-stone-300">
                 2. Friendly Note (Optional or edit above)
               </label>
-              <span className="text-[10px] text-stone-400">
+              <span className="text-[10px] text-stone-400 dark:text-stone-500">
                 {customMessage.length}/300
               </span>
             </div>
@@ -146,17 +146,17 @@ const IntroductionDialogContent: React.FC<IntroductionDialogContentProps> = ({
               value={customMessage}
               onChange={e => setCustomMessage(e.target.value)}
               placeholder="Add a warm sentence about why you'd love to connect..."
-              className="w-full p-3 rounded-xl border border-stone-200 focus:outline-none focus:ring-2 focus:ring-teal-600 text-xs text-stone-800"
+              className="w-full p-3 rounded-xl border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-800 focus:outline-none focus:ring-2 focus:ring-teal-600 text-xs text-stone-800 dark:text-stone-100"
             />
           </div>
 
           {/* Consent Reminders */}
-          <div className="p-3.5 rounded-xl bg-teal-50/70 border border-teal-200 text-xs text-teal-900 space-y-1">
+          <div className="p-3.5 rounded-xl bg-teal-50/70 dark:bg-teal-950/40 border border-teal-200 dark:border-teal-800 text-xs text-teal-900 dark:text-teal-200 space-y-1">
             <div className="flex items-center gap-1.5 font-bold">
-              <ShieldCheck className="w-4 h-4 text-teal-700" />
+              <ShieldCheck className="w-4 h-4 text-teal-700 dark:text-teal-400" />
               <span>Consent-First Guarantee</span>
             </div>
-            <p className="text-[11px] text-teal-800 leading-relaxed">
+            <p className="text-[11px] text-teal-800 dark:text-teal-300 leading-relaxed">
               {targetUser.name} can accept, decline, or ignore this invitation with zero public notification or penalty. Direct messaging will only unlock if both of you agree.
             </p>
           </div>
@@ -166,14 +166,14 @@ const IntroductionDialogContent: React.FC<IntroductionDialogContentProps> = ({
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 text-xs font-semibold text-stone-600 hover:text-stone-900 rounded-xl"
+              className="px-4 py-2 text-xs font-semibold text-stone-600 dark:text-stone-400 hover:text-stone-900 dark:hover:text-stone-100 rounded-xl"
             >
               Cancel
             </button>
 
             <button
               type="submit"
-              className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-stone-900 hover:bg-teal-700 text-white text-xs font-bold shadow-md transition-all"
+              className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-stone-900 dark:bg-teal-600 hover:bg-teal-700 text-white text-xs font-bold shadow-md transition-all"
             >
               <Send className="w-3.5 h-3.5" />
               <span>Send Introduction</span>

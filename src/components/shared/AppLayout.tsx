@@ -34,7 +34,7 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
   const { setActiveTab: setModule3Tab, setShowPresentationModal } = useApp();
 
   return (
-    <div className="min-h-screen flex flex-col justify-between bg-[#FAF9F5] text-stone-900 font-sans selection:bg-teal-200 selection:text-teal-900">
+    <div className="min-h-screen flex flex-col justify-between bg-[#FAF9F5] dark:bg-[#0c0a09] text-stone-900 dark:text-stone-100 font-sans selection:bg-teal-200 dark:selection:bg-teal-800 selection:text-teal-900 dark:selection:text-teal-100 transition-colors duration-200">
       {/* Persistent Unified Global Header */}
       <AppHeader
         activeModule={activeModule}

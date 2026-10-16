@@ -16,7 +16,8 @@ interface AuthModalProps {
   isOpen: boolean;
   onClose: () => void;
   session: AuthSession;
-  onSessionUpdated: (session: AuthSession) => void;
+  onSessionUpdated?: (session: AuthSession) => void;
+  promptMessage?: string;
 }
 
 export const AuthModal: React.FC<AuthModalProps> = ({
@@ -24,6 +25,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   onClose,
   session,
   onSessionUpdated,
+  promptMessage,
 }) => {
   const [mode, setMode] = useState<'signin' | 'signup' | 'status'>('signin');
   const [email, setEmail] = useState('');
@@ -53,7 +55,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         setErrorMsg(result.error);
       } else {
         const newSession = await authService.getSession();
-        onSessionUpdated(newSession);
+        onSessionUpdated?.(newSession);
         setSuccessMsg(`Signed in successfully as ${newSession.profile?.display_name || email}!`);
         setTimeout(() => {
           onClose();
@@ -86,7 +88,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         setErrorMsg(result.error);
       } else {
         const newSession = await authService.getSession();
-        onSessionUpdated(newSession);
+        onSessionUpdated?.(newSession);
         setSuccessMsg('Account registered successfully! Welcome to CommonGround.');
         setTimeout(() => {
           onClose();
@@ -104,7 +106,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     try {
       await authService.signOut();
       const newSession = await authService.getSession();
-      onSessionUpdated(newSession);
+      onSessionUpdated?.(newSession);
       setSuccessMsg('Signed out successfully.');
       setTimeout(() => {
         onClose();
@@ -144,7 +146,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
       }
 
       const newSession = await authService.getSession();
-      onSessionUpdated(newSession);
+      onSessionUpdated?.(newSession);
       setSuccessMsg(`Switched to demo role: ${role.toUpperCase()}`);
       setTimeout(() => {
         onClose();
@@ -157,26 +159,26 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-stone-900/60 backdrop-blur-xs animate-in fade-in duration-200">
-      <div className="relative w-full max-w-md bg-white rounded-2xl shadow-2xl border border-stone-200 overflow-hidden">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-stone-900/60 dark:bg-black/70 backdrop-blur-xs animate-in fade-in duration-200">
+      <div className="relative w-full max-w-md bg-white dark:bg-stone-900 rounded-2xl shadow-2xl border border-stone-200 dark:border-stone-800 overflow-hidden text-stone-900 dark:text-stone-100">
         {/* Header */}
-        <div className="px-6 pt-6 pb-4 border-b border-stone-100 bg-stone-50/50 flex items-center justify-between">
+        <div className="px-6 pt-6 pb-4 border-b border-stone-100 dark:border-stone-800 bg-stone-50/50 dark:bg-stone-950/50 flex items-center justify-between">
           <div className="flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-lg bg-teal-800 text-teal-200 flex items-center justify-center font-bold text-xs">
               CG
             </div>
             <div>
-              <h3 className="font-heading font-bold text-base text-stone-900">
+              <h3 className="font-heading font-bold text-base text-stone-900 dark:text-stone-100">
                 {session.isAuthenticated ? 'Account & Session' : 'CommonGround Authentication'}
               </h3>
-              <p className="text-xs text-stone-500">
+              <p className="text-xs text-stone-500 dark:text-stone-400">
                 {isConnected ? 'PostgreSQL & Supabase Connected' : 'Local Demonstration Mode'}
               </p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-1 text-stone-400 hover:text-stone-700 rounded-lg hover:bg-stone-100"
+            className="p-1 text-stone-400 hover:text-stone-700 dark:hover:text-stone-200 rounded-lg hover:bg-stone-100 dark:hover:bg-stone-800"
           >
             <X className="w-5 h-5" />
           </button>
@@ -185,8 +187,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         {/* Database Status Banner */}
         <div className={`px-6 py-2.5 text-xs flex items-center justify-between border-b ${
           isConnected
-            ? 'bg-emerald-50 text-emerald-800 border-emerald-100'
-            : 'bg-amber-50 text-amber-800 border-amber-100'
+            ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-200 border-emerald-100 dark:border-emerald-900/60'
+            : 'bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-200 border-amber-100 dark:border-amber-900/60'
         }`}>
           <div className="flex items-center gap-2">
             <div className={`w-2 h-2 rounded-full ${isConnected ? 'bg-emerald-500 animate-pulse' : 'bg-amber-500'}`} />
@@ -196,7 +198,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           </div>
           <button
             onClick={() => setMode('status')}
-            className="underline hover:text-stone-900 font-semibold"
+            className="underline hover:text-stone-900 dark:hover:text-white font-semibold"
           >
             Details
           </button>
@@ -204,15 +206,22 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
         {/* Content Body */}
         <div className="p-6">
+          {promptMessage && !session.isAuthenticated && mode !== 'status' && (
+            <div className="mb-4 p-3 rounded-xl bg-teal-50 dark:bg-teal-950/40 border border-teal-200 dark:border-teal-800 text-teal-900 dark:text-teal-200 text-xs flex items-start gap-2">
+              <Lock className="w-4 h-4 shrink-0 mt-0.5 text-teal-700 dark:text-teal-400" />
+              <span className="font-medium">{promptMessage}</span>
+            </div>
+          )}
+
           {errorMsg && (
-            <div className="mb-4 p-3 rounded-xl bg-red-50 border border-red-100 text-red-700 text-xs flex items-start gap-2">
+            <div className="mb-4 p-3 rounded-xl bg-red-50 dark:bg-red-950/40 border border-red-100 dark:border-red-900/60 text-red-700 dark:text-red-300 text-xs flex items-start gap-2">
               <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
               <span>{errorMsg}</span>
             </div>
           )}
 
           {successMsg && (
-            <div className="mb-4 p-3 rounded-xl bg-emerald-50 border border-emerald-100 text-emerald-700 text-xs flex items-start gap-2">
+            <div className="mb-4 p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-100 dark:border-emerald-900/60 text-emerald-700 dark:text-emerald-300 text-xs flex items-start gap-2">
               <CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5" />
               <span>{successMsg}</span>
             </div>
@@ -350,12 +359,14 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             /* Sign In / Sign Up Form */
             <div>
               {/* Tab Toggle */}
-              <div className="flex rounded-xl bg-stone-100 p-1 mb-5">
+              <div className="flex rounded-xl bg-stone-100 dark:bg-stone-800 p-1 mb-5">
                 <button
                   type="button"
                   onClick={() => setMode('signin')}
                   className={`flex-1 py-1.5 text-xs font-semibold rounded-lg transition-all ${
-                    mode === 'signin' ? 'bg-white text-stone-900 shadow-2xs' : 'text-stone-600 hover:text-stone-900'
+                    mode === 'signin'
+                      ? 'bg-white dark:bg-stone-900 text-stone-900 dark:text-stone-100 shadow-2xs'
+                      : 'text-stone-600 dark:text-stone-400 hover:text-stone-900 dark:hover:text-stone-100'
                   }`}
                 >
                   Sign In
@@ -364,7 +375,9 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                   type="button"
                   onClick={() => setMode('signup')}
                   className={`flex-1 py-1.5 text-xs font-semibold rounded-lg transition-all ${
-                    mode === 'signup' ? 'bg-white text-stone-900 shadow-2xs' : 'text-stone-600 hover:text-stone-900'
+                    mode === 'signup'
+                      ? 'bg-white dark:bg-stone-900 text-stone-900 dark:text-stone-100 shadow-2xs'
+                      : 'text-stone-600 dark:text-stone-400 hover:text-stone-900 dark:hover:text-stone-100'
                   }`}
                 >
                   Register
@@ -374,7 +387,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
               <form onSubmit={mode === 'signin' ? handleSignIn : handleSignUp} className="space-y-3.5">
                 {mode === 'signup' && (
                   <div>
-                    <label className="block text-xs font-medium text-stone-700 mb-1">Display Name</label>
+                    <label className="block text-xs font-medium text-stone-700 dark:text-stone-300 mb-1">Display Name</label>
                     <div className="relative">
                       <User className="w-4 h-4 text-stone-400 absolute left-3 top-2.5" />
                       <input
@@ -383,14 +396,14 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                         onChange={(e) => setDisplayName(e.target.value)}
                         placeholder="e.g. Maya Lin"
                         required
-                        className="w-full pl-9 pr-3 py-2 text-xs rounded-xl border border-stone-200 focus:outline-none focus:ring-2 focus:ring-teal-700/20 focus:border-teal-700"
+                        className="w-full pl-9 pr-3 py-2 text-xs rounded-xl border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-800 text-stone-900 dark:text-stone-100 focus:outline-none focus:ring-2 focus:ring-teal-700/20 focus:border-teal-700"
                       />
                     </div>
                   </div>
                 )}
 
                 <div>
-                  <label className="block text-xs font-medium text-stone-700 mb-1">Email Address</label>
+                  <label className="block text-xs font-medium text-stone-700 dark:text-stone-300 mb-1">Email Address</label>
                   <div className="relative">
                     <Mail className="w-4 h-4 text-stone-400 absolute left-3 top-2.5" />
                     <input
@@ -399,13 +412,13 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                       onChange={(e) => setEmail(e.target.value)}
                       placeholder="you@university.edu"
                       required
-                      className="w-full pl-9 pr-3 py-2 text-xs rounded-xl border border-stone-200 focus:outline-none focus:ring-2 focus:ring-teal-700/20 focus:border-teal-700"
+                      className="w-full pl-9 pr-3 py-2 text-xs rounded-xl border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-800 text-stone-900 dark:text-stone-100 focus:outline-none focus:ring-2 focus:ring-teal-700/20 focus:border-teal-700"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-xs font-medium text-stone-700 mb-1">Password</label>
+                  <label className="block text-xs font-medium text-stone-700 dark:text-stone-300 mb-1">Password</label>
                   <div className="relative">
                     <Lock className="w-4 h-4 text-stone-400 absolute left-3 top-2.5" />
                     <input
@@ -414,7 +427,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                       onChange={(e) => setPassword(e.target.value)}
                       placeholder="••••••••"
                       required
-                      className="w-full pl-9 pr-3 py-2 text-xs rounded-xl border border-stone-200 focus:outline-none focus:ring-2 focus:ring-teal-700/20 focus:border-teal-700"
+                      className="w-full pl-9 pr-3 py-2 text-xs rounded-xl border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-800 text-stone-900 dark:text-stone-100 focus:outline-none focus:ring-2 focus:ring-teal-700/20 focus:border-teal-700"
                     />
                   </div>
                 </div>
@@ -429,27 +442,27 @@ export const AuthModal: React.FC<AuthModalProps> = ({
               </form>
 
               {/* Demo Quick Logins */}
-              <div className="mt-5 pt-4 border-t border-stone-100">
-                <p className="text-[11px] text-stone-500 mb-2 text-center">Or quickly test as a sample persona:</p>
+              <div className="mt-5 pt-4 border-t border-stone-100 dark:border-stone-800">
+                <p className="text-[11px] text-stone-500 dark:text-stone-400 mb-2 text-center">Or quickly test as a sample persona:</p>
                 <div className="grid grid-cols-3 gap-2">
                   <button
                     type="button"
                     onClick={() => handleQuickDemoLogin('user')}
-                    className="py-1.5 px-2 bg-stone-100 hover:bg-stone-200 text-stone-700 rounded-lg text-xs font-medium text-center transition"
+                    className="py-1.5 px-2 bg-stone-100 dark:bg-stone-800 hover:bg-stone-200 dark:hover:bg-stone-700 text-stone-700 dark:text-stone-300 rounded-lg text-xs font-medium text-center transition"
                   >
                     Maya (Student)
                   </button>
                   <button
                     type="button"
                     onClick={() => handleQuickDemoLogin('editor')}
-                    className="py-1.5 px-2 bg-stone-100 hover:bg-stone-200 text-stone-700 rounded-lg text-xs font-medium text-center transition"
+                    className="py-1.5 px-2 bg-teal-50 dark:bg-teal-950/40 hover:bg-teal-100 dark:hover:bg-teal-900 text-teal-900 dark:text-teal-200 rounded-lg text-xs font-semibold text-center transition"
                   >
-                    Dr. Elena (Editor)
+                    Editor
                   </button>
                   <button
                     type="button"
                     onClick={() => handleQuickDemoLogin('admin')}
-                    className="py-1.5 px-2 bg-stone-100 hover:bg-stone-200 text-stone-700 rounded-lg text-xs font-medium text-center transition"
+                    className="py-1.5 px-2 bg-purple-50 dark:bg-purple-950/40 hover:bg-purple-100 dark:hover:bg-purple-900 text-purple-900 dark:text-purple-200 rounded-lg text-xs font-semibold text-center transition"
                   >
                     Admin
                   </button>

@@ -74,6 +74,33 @@ export const INITIAL_CURRENT_USER: User = {
   joinedDate: 'October 2026',
 };
 
+export const GUEST_VISITOR_USER: User = {
+  id: 'guest-visitor',
+  name: 'Visitor (Unauthenticated)',
+  pronouns: 'they/them',
+  age: 22,
+  headline: 'Exploring CommonGround in guest mode (Sign in to connect)',
+  bio: 'Sign in or register to create and customize your verified profile, exchange mutual introductions, and chat with members.',
+  avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=400&q=80',
+  avatarColor: 'bg-stone-100 text-stone-800 border-stone-300',
+  location: 'Seattle, WA',
+  interests: ['Specialty Coffee', 'Hiking & Trails', 'Analog Photography'],
+  intentions: ['Friendship'],
+  values: ['Empathy & Kindness', 'Authenticity'],
+  communicationPreferences: {
+    pace: 'Gradual & thoughtful',
+    style: 'Deep & reflective',
+    socialEnergy: 'Ambivert / Adaptable',
+  },
+  privacySettings: {
+    discoveryPaused: false,
+    visibility: 'public_match',
+    showLocation: true,
+    introRequirement: 'any',
+  },
+  joinedDate: 'October 2026',
+};
+
 export const MOCK_USERS: User[] = [
   {
     id: 'user-elena-1',

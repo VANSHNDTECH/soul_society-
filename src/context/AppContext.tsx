@@ -14,12 +14,13 @@ import {
 import { DEFAULT_INFLUENCE_SETTINGS } from '../utils/compatibility';
 import {
   INITIAL_CURRENT_USER,
+  GUEST_VISITOR_USER,
   MOCK_USERS,
   INITIAL_INTRODUCTIONS,
   INITIAL_CONNECTIONS,
   INITIAL_MESSAGES,
 } from '../data/mockUsers';
-import { authService } from '../services/authService';
+import { authService, AuthSession } from '../services/authService';
 import { connectionService } from '../services/connectionService';
 import { chatService } from '../services/chatService';
 import { safetyService } from '../services/safetyService';
@@ -27,6 +28,7 @@ import { profileService } from '../services/profileService';
 import { discoveryService } from '../services/discoveryService';
 import { isSupabaseConfigured } from '../lib/supabase';
 import { DbProfile } from '../types/database';
+import { useTheme, ThemeMode, ResolvedTheme } from './ThemeContext';
 
 interface AppContextType {
   currentUser: User;
@@ -94,10 +96,22 @@ interface AppContextType {
   minCompatibilityScore: number;
   setMinCompatibilityScore: (val: number) => void;
 
-  // Full-Stack Extensions
+  // Full-Stack & Authentication Extensions
   isBackendConnected: boolean;
   userRole: 'user' | 'editor' | 'moderator' | 'admin';
   refreshBackendData: () => Promise<void>;
+  authSession: AuthSession;
+  authModalOpen: boolean;
+  setAuthModalOpen: (open: boolean) => void;
+  authModalPrompt: string;
+  openAuthModal: (prompt?: string) => void;
+  requireAuth: (actionName: string, onAuthorized?: () => void) => boolean;
+
+  // Theme Integration
+  theme: ThemeMode;
+  resolvedTheme: ResolvedTheme;
+  setTheme: (mode: ThemeMode) => void;
+  toggleTheme: () => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -138,15 +152,46 @@ function profileToUser(profile: DbProfile, fallback: User): User {
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const isBackend = isSupabaseConfigured();
+  const { theme, resolvedTheme, setTheme, toggleTheme } = useTheme();
 
-  // Current user state
+  // Authentication & session state
+  const [authSession, setAuthSession] = useState<AuthSession>(() => authService.getCachedSession());
+  const [authModalOpen, setAuthModalOpen] = useState<boolean>(false);
+  const [authModalPrompt, setAuthModalPrompt] = useState<string>(
+    'Sign in to access your profile, send introductions, and message members.'
+  );
+
+  const openAuthModal = useCallback((prompt?: string) => {
+    if (prompt) setAuthModalPrompt(prompt);
+    setAuthModalOpen(true);
+  }, []);
+
+  const requireAuth = useCallback(
+    (actionName: string, onAuthorized?: () => void): boolean => {
+      if (!authSession.isAuthenticated) {
+        openAuthModal(`Sign in or create an account to ${actionName}. Protected actions require a verified identity.`);
+        showToast(`Authentication required: Sign in to ${actionName}.`, 'warning');
+        return false;
+      }
+      if (onAuthorized) onAuthorized();
+      return true;
+    },
+    [authSession.isAuthenticated, openAuthModal]
+  );
+
+  // Current user state: authenticated profile or guest visitor
   const [currentUser, setCurrentUser] = useState<User>(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEYS.CURRENT_USER);
-      return saved ? JSON.parse(saved) : INITIAL_CURRENT_USER;
-    } catch {
-      return INITIAL_CURRENT_USER;
+    const cached = authService.getCachedSession();
+    if (cached.isAuthenticated && cached.profile) {
+      try {
+        const saved = localStorage.getItem(STORAGE_KEYS.CURRENT_USER);
+        const parsed = saved ? JSON.parse(saved) : null;
+        return profileToUser(cached.profile, parsed || INITIAL_CURRENT_USER);
+      } catch {
+        return profileToUser(cached.profile, INITIAL_CURRENT_USER);
+      }
     }
+    return GUEST_VISITOR_USER;
   });
 
   const [influenceSettings, setInfluenceSettings] = useState<InfluenceSettings>(() => {
@@ -170,7 +215,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [userRole, setUserRole] = useState<'user' | 'editor' | 'moderator' | 'admin'>('user');
   const [dbDiscoverableUsers, setDbDiscoverableUsers] = useState<User[]>([]);
   const [activePersonaId, setActivePersonaId] = useState<string>('user-current-maya');
-  const [activeTab, setActiveTab] = useState<ActiveTab>('landing');
+  const [activeTab, setActiveTab] = useState<ActiveTab>('overview');
 
   // Modals
   const [detailUser, setDetailUser] = useState<User | null>(null);
@@ -179,8 +224,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [reportTargetUser, setReportTargetUser] = useState<User | null>(null);
   const [showPresentationModal, setShowPresentationModal] = useState<boolean>(false);
 
-  // Introductions
+  // Introductions: protected per-user state
   const [introductions, setIntroductions] = useState<IntroductionRequest[]>(() => {
+    const cached = authService.getCachedSession();
+    if (!cached.isAuthenticated) return [];
     try {
       const saved = localStorage.getItem(STORAGE_KEYS.INTRODUCTIONS);
       return saved ? JSON.parse(saved) : INITIAL_INTRODUCTIONS;
@@ -189,8 +236,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   });
 
-  // Connections
+  // Connections: protected per-user state
   const [connections, setConnections] = useState<Connection[]>(() => {
+    const cached = authService.getCachedSession();
+    if (!cached.isAuthenticated) return [];
     try {
       const saved = localStorage.getItem(STORAGE_KEYS.CONNECTIONS);
       return saved ? JSON.parse(saved) : INITIAL_CONNECTIONS;
@@ -199,12 +248,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   });
 
-  const [activeConnectionId, setActiveConnectionId] = useState<string | null>(
-    INITIAL_CONNECTIONS[0]?.id || null
-  );
+  const [activeConnectionId, setActiveConnectionId] = useState<string | null>(() => {
+    const cached = authService.getCachedSession();
+    if (!cached.isAuthenticated) return null;
+    return INITIAL_CONNECTIONS[0]?.id || null;
+  });
 
-  // Messages
+  // Messages: protected per-user state
   const [messages, setMessages] = useState<Record<string, ChatMessage[]>>(() => {
+    const cached = authService.getCachedSession();
+    if (!cached.isAuthenticated) return {};
     try {
       const saved = localStorage.getItem(STORAGE_KEYS.MESSAGES);
       return saved ? JSON.parse(saved) : INITIAL_MESSAGES;
@@ -252,9 +305,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const refreshBackendData = useCallback(async () => {
     try {
       const session = await authService.getSession();
-      if (session.profile) {
+      setAuthSession(session);
+      if (session.isAuthenticated && session.profile) {
         setUserRole(session.profile.role || 'user');
-        setCurrentUser(prev => profileToUser(session.profile!, prev));
+        setCurrentUser(prev => profileToUser(session.profile!, prev.id === GUEST_VISITOR_USER.id ? INITIAL_CURRENT_USER : prev));
+      } else {
+        setUserRole('user');
+        setCurrentUser(GUEST_VISITOR_USER);
+        setIntroductions([]);
+        setConnections([]);
+        setActiveConnectionId(null);
+        setMessages({});
       }
 
       if (isBackend && session.user) {
@@ -354,12 +415,22 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   useEffect(() => {
     refreshBackendData();
 
-    // Listen to Supabase auth events
+    // Listen to Supabase & local auth events
     const unsub = authService.onAuthStateChange(session => {
-      if (session.profile) {
+      setAuthSession(session);
+      if (session.isAuthenticated && session.profile) {
         setUserRole(session.profile.role || 'user');
-        setCurrentUser(prev => profileToUser(session.profile!, prev));
+        setCurrentUser(prev => profileToUser(session.profile!, prev.id === GUEST_VISITOR_USER.id ? INITIAL_CURRENT_USER : prev));
         showToast(`Signed in as ${session.profile.display_name} (${session.profile.role})`, 'success');
+        refreshBackendData();
+      } else {
+        setUserRole('user');
+        setCurrentUser(GUEST_VISITOR_USER);
+        setIntroductions([]);
+        setConnections([]);
+        setActiveConnectionId(null);
+        setMessages({});
+        showToast('Signed out. You are now browsing in visitor mode.', 'info');
       }
     });
 
@@ -420,33 +491,46 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     };
   }, [activeConnectionId, isBackend]);
 
-  // Persistence side-effects in localStorage
+  // Persistence side-effects in localStorage (only for authenticated users)
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEYS.CURRENT_USER, JSON.stringify(currentUser));
+    if (currentUser.id !== GUEST_VISITOR_USER.id) {
+      localStorage.setItem(STORAGE_KEYS.CURRENT_USER, JSON.stringify(currentUser));
+    }
   }, [currentUser]);
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEYS.INTRODUCTIONS, JSON.stringify(introductions));
-  }, [introductions]);
+    if (authSession.isAuthenticated) {
+      localStorage.setItem(STORAGE_KEYS.INTRODUCTIONS, JSON.stringify(introductions));
+    }
+  }, [introductions, authSession.isAuthenticated]);
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEYS.CONNECTIONS, JSON.stringify(connections));
-  }, [connections]);
+    if (authSession.isAuthenticated) {
+      localStorage.setItem(STORAGE_KEYS.CONNECTIONS, JSON.stringify(connections));
+    }
+  }, [connections, authSession.isAuthenticated]);
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEYS.MESSAGES, JSON.stringify(messages));
-  }, [messages]);
+    if (authSession.isAuthenticated) {
+      localStorage.setItem(STORAGE_KEYS.MESSAGES, JSON.stringify(messages));
+    }
+  }, [messages, authSession.isAuthenticated]);
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEYS.BLOCKED, JSON.stringify(blockedUserIds));
-  }, [blockedUserIds]);
+    if (authSession.isAuthenticated) {
+      localStorage.setItem(STORAGE_KEYS.BLOCKED, JSON.stringify(blockedUserIds));
+    }
+  }, [blockedUserIds, authSession.isAuthenticated]);
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEYS.REPORTS, JSON.stringify(reports));
-  }, [reports]);
+    if (authSession.isAuthenticated) {
+      localStorage.setItem(STORAGE_KEYS.REPORTS, JSON.stringify(reports));
+    }
+  }, [reports, authSession.isAuthenticated]);
 
   // Profile update handler
   const updateCurrentUser = async (updated: Partial<User>) => {
+    if (!requireAuth('update your profile')) return;
     setCurrentUser(prev => ({ ...prev, ...updated }));
     showToast('Your profile preferences have been updated.', 'success');
 
@@ -465,6 +549,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const updateCommunicationPreferences = async (prefs: Partial<CommunicationPreferences>) => {
+    if (!requireAuth('save communication preferences')) return;
     const updated = { ...currentUser.communicationPreferences, ...prefs };
     setCurrentUser(prev => ({
       ...prev,
@@ -482,6 +567,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const updatePrivacySettings = async (settings: Partial<PrivacySettings>) => {
+    if (!requireAuth('modify privacy settings')) return;
     const updated = { ...currentUser.privacySettings, ...settings };
     setCurrentUser(prev => ({
       ...prev,
@@ -498,6 +584,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const togglePauseDiscovery = async () => {
+    if (!requireAuth('change discovery visibility')) return;
     const newState = !currentUser.privacySettings.discoveryPaused;
     setCurrentUser(prev => ({
       ...prev,
@@ -572,6 +659,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     message: string,
     sharedInterestRef: string
   ) => {
+    if (!requireAuth('send an introduction invitation')) return;
+
     const target = allUsers.find(u => u.id === toUserId);
     if (!target) return;
 
@@ -620,6 +709,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   // Recipient accepts introduction
   const acceptIntroduction = async (introId: string) => {
+    if (!requireAuth('accept this introduction')) return;
+
     const intro = introductions.find(i => i.id === introId);
     if (!intro) return;
 
@@ -686,6 +777,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   // Recipient declines introduction quietly (no penalty, no public counter)
   const declineIntroduction = async (introId: string) => {
+    if (!requireAuth('decline this introduction')) return;
+
     setIntroductions(prev =>
       prev.map(i => (i.id === introId ? { ...i, status: 'declined' } : i))
     );
@@ -698,6 +791,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   // Sender cancels introduction
   const cancelIntroduction = async (introId: string) => {
+    if (!requireAuth('cancel this introduction')) return;
+
     setIntroductions(prev =>
       prev.map(i => (i.id === introId ? { ...i, status: 'cancelled' } : i))
     );
@@ -710,6 +805,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   // Send a chat message
   const sendMessage = async (connectionId: string, text: string) => {
+    if (!requireAuth('send messages in this conversation')) return;
     if (!text.trim()) return;
 
     const trimmed = text.trim();
@@ -773,6 +869,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   // Pause connection
   const pauseConnection = (connectionId: string) => {
+    if (!requireAuth('manage connection status')) return;
+
     setConnections(prev =>
       prev.map(c => (c.id === connectionId ? { ...c, status: c.status === 'paused' ? 'active' : 'paused' } : c))
     );
@@ -781,6 +879,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   // End connection gracefully
   const disconnectConnection = async (connectionId: string) => {
+    if (!requireAuth('disconnect from this member')) return;
+
     setConnections(prev =>
       prev.map(c => (c.id === connectionId ? { ...c, status: 'disconnected' } : c))
     );
@@ -793,6 +893,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   // Block user
   const blockUser = async (userId: string) => {
+    if (!requireAuth('block a member')) return;
+
     if (!blockedUserIds.includes(userId)) {
       setBlockedUserIds(prev => [...prev, userId]);
     }
@@ -810,6 +912,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const unblockUser = async (userId: string) => {
+    if (!requireAuth('unblock a member')) return;
+
     setBlockedUserIds(prev => prev.filter(id => id !== userId));
     const target = allUsers.find(u => u.id === userId);
     showToast(`${target?.name || 'User'} has been unblocked.`, 'success');
@@ -821,6 +925,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   // Report user
   const submitReport = async (userId: string, reason: string, details: string, alsoBlock: boolean = false) => {
+    if (!requireAuth('submit a safety report')) return;
+
     const target = allUsers.find(u => u.id === userId);
     const newReport: ReportRecord = {
       id: `report-${Date.now()}`,
@@ -866,13 +972,21 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     localStorage.removeItem(STORAGE_KEYS.BLOCKED);
     localStorage.removeItem(STORAGE_KEYS.REPORTS);
     
-    setCurrentUser(INITIAL_CURRENT_USER);
-    setIntroductions(INITIAL_INTRODUCTIONS);
-    setConnections(INITIAL_CONNECTIONS);
-    setMessages(INITIAL_MESSAGES);
+    if (authSession.isAuthenticated) {
+      setCurrentUser(INITIAL_CURRENT_USER);
+      setIntroductions(INITIAL_INTRODUCTIONS);
+      setConnections(INITIAL_CONNECTIONS);
+      setMessages(INITIAL_MESSAGES);
+      setActiveConnectionId(INITIAL_CONNECTIONS[0]?.id || null);
+    } else {
+      setCurrentUser(GUEST_VISITOR_USER);
+      setIntroductions([]);
+      setConnections([]);
+      setMessages({});
+      setActiveConnectionId(null);
+    }
     setBlockedUserIds([]);
     setReports([]);
-    setActiveConnectionId(INITIAL_CONNECTIONS[0]?.id || null);
     showToast('Demo data reset to default seed.', 'info');
   };
 
@@ -934,6 +1048,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         isBackendConnected: isBackend,
         userRole,
         refreshBackendData,
+        authSession,
+        authModalOpen,
+        setAuthModalOpen,
+        authModalPrompt,
+        openAuthModal,
+        requireAuth,
+        theme,
+        resolvedTheme,
+        setTheme,
+        toggleTheme,
       }}
     >
       {children}

@@ -5,6 +5,7 @@ import {
   ArrowLeft,
   Check,
   Zap,
+  Lock,
 } from 'lucide-react';
 import {
   IntentionType,
@@ -15,7 +16,7 @@ import {
 import { ALL_INTEREST_TAGS, ALL_VALUES } from '../data/mockUsers';
 
 export const OnboardingView: React.FC = () => {
-  const { currentUser, updateCurrentUser, setActiveTab, showToast } = useApp();
+  const { currentUser, updateCurrentUser, setActiveTab, showToast, authSession, openAuthModal } = useApp();
 
   const [step, setStep] = useState<number>(1);
   const totalSteps = 6;
@@ -68,6 +69,10 @@ export const OnboardingView: React.FC = () => {
     if (step < totalSteps) {
       setStep(prev => prev + 1);
     } else {
+      if (!authSession.isAuthenticated) {
+        openAuthModal('Please sign in or create an account to save your verified profile to the database.');
+        return;
+      }
       // Save all to AppContext
       updateCurrentUser({
         name: name.trim(),
@@ -158,12 +163,12 @@ export const OnboardingView: React.FC = () => {
   return (
     <div className="max-w-3xl mx-auto px-4 sm:px-6 py-8 text-left">
       {/* Top Banner with Quick Fill */}
-      <div className="flex items-center justify-between pb-6 mb-6 border-b border-stone-200">
+      <div className="flex items-center justify-between pb-6 mb-6 border-b border-stone-200 dark:border-stone-800">
         <div>
-          <span className="text-xs font-bold text-teal-800 uppercase tracking-wider">
+          <span className="text-xs font-bold text-teal-800 dark:text-teal-400 uppercase tracking-wider">
             Step {step} of {totalSteps}
           </span>
-          <h2 className="text-2xl font-bold text-stone-900 mt-1">
+          <h2 className="text-2xl font-bold text-stone-900 dark:text-stone-100 mt-1">
             {step === 1 && 'Welcome! Tell us what to call you'}
             {step === 2 && 'What brings you to CommonGround?'}
             {step === 3 && 'What activities and topics excite you?'}
@@ -176,16 +181,40 @@ export const OnboardingView: React.FC = () => {
         <button
           type="button"
           onClick={prefillDemo}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-teal-50 hover:bg-teal-100 text-teal-800 text-xs font-semibold border border-teal-200 transition-colors shrink-0"
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-teal-50 dark:bg-teal-950/60 hover:bg-teal-100 dark:hover:bg-teal-900/60 text-teal-800 dark:text-teal-300 text-xs font-semibold border border-teal-200 dark:border-teal-800 transition-colors shrink-0"
           title="Autofill Maya Lin's demo profile"
         >
-          <Zap className="w-3.5 h-3.5 text-teal-600" />
+          <Zap className="w-3.5 h-3.5 text-teal-600 dark:text-teal-400" />
           <span>Quick Demo Fill</span>
         </button>
       </div>
 
+      {/* Visitor Preview Mode Banner */}
+      {!authSession.isAuthenticated && (
+        <div className="mb-6 p-4 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 flex items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <Lock className="w-5 h-5 text-amber-600 dark:text-amber-400 shrink-0" />
+            <div>
+              <p className="text-sm font-semibold text-amber-950 dark:text-amber-200">
+                Visitor Preview Mode
+              </p>
+              <p className="text-xs text-amber-800 dark:text-amber-300">
+                You are previewing onboarding. Sign in or register to persist your verified profile in the database.
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => openAuthModal('Sign in or register to save your profile to the database.')}
+            className="px-3.5 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-semibold shrink-0 shadow-2xs transition-colors"
+          >
+            Sign In / Register
+          </button>
+        </div>
+      )}
+
       {/* Progress Bar */}
-      <div className="w-full bg-stone-200 rounded-full h-2 mb-8 overflow-hidden">
+      <div className="w-full bg-stone-200 dark:bg-stone-800 rounded-full h-2 mb-8 overflow-hidden">
         <div
           className="bg-teal-600 h-2 rounded-full transition-all duration-300"
           style={{ width: `${(step / totalSteps) * 100}%` }}
@@ -193,23 +222,23 @@ export const OnboardingView: React.FC = () => {
       </div>
 
       {error && (
-        <div className="p-3 mb-6 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-sm font-medium">
+        <div className="p-3 mb-6 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-300 text-sm font-medium">
           {error}
         </div>
       )}
 
       {/* Step Contents */}
-      <div className="bg-white rounded-2xl border border-stone-200/90 p-6 sm:p-8 shadow-sm space-y-6">
+      <div className="bg-white dark:bg-stone-900 rounded-2xl border border-stone-200/90 dark:border-stone-800 p-6 sm:p-8 shadow-sm space-y-6">
         {/* STEP 1: Basic Info */}
         {step === 1 && (
           <div className="space-y-5">
-            <p className="text-sm text-stone-600">
+            <p className="text-sm text-stone-600 dark:text-stone-400">
               Only share what feels comfortable. No public popularity metrics, no follower counts.
             </p>
 
             <div className="grid sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-semibold text-stone-700 uppercase tracking-wide mb-1.5">
+                <label className="block text-xs font-semibold text-stone-700 dark:text-stone-300 uppercase tracking-wide mb-1.5">
                   First Name or Display Name *
                 </label>
                 <input
@@ -217,12 +246,12 @@ export const OnboardingView: React.FC = () => {
                   value={name}
                   onChange={e => setName(e.target.value)}
                   placeholder="e.g. Maya"
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-stone-300 focus:outline-none focus:ring-2 focus:ring-teal-600 text-sm"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-800 text-stone-900 dark:text-stone-100 placeholder-stone-400 dark:placeholder-stone-500 focus:outline-none focus:ring-2 focus:ring-teal-600 text-sm"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-stone-700 uppercase tracking-wide mb-1.5">
+                <label className="block text-xs font-semibold text-stone-700 dark:text-stone-300 uppercase tracking-wide mb-1.5">
                   Pronouns (optional)
                 </label>
                 <input
@@ -230,14 +259,14 @@ export const OnboardingView: React.FC = () => {
                   value={pronouns}
                   onChange={e => setPronouns(e.target.value)}
                   placeholder="e.g. she/her or they/them"
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-stone-300 focus:outline-none focus:ring-2 focus:ring-teal-600 text-sm"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-800 text-stone-900 dark:text-stone-100 placeholder-stone-400 dark:placeholder-stone-500 focus:outline-none focus:ring-2 focus:ring-teal-600 text-sm"
                 />
               </div>
             </div>
 
             <div className="grid sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-semibold text-stone-700 uppercase tracking-wide mb-1.5">
+                <label className="block text-xs font-semibold text-stone-700 dark:text-stone-300 uppercase tracking-wide mb-1.5">
                   General Location / City
                 </label>
                 <input
@@ -245,12 +274,12 @@ export const OnboardingView: React.FC = () => {
                   value={location}
                   onChange={e => setLocation(e.target.value)}
                   placeholder="e.g. Seattle, WA"
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-stone-300 focus:outline-none focus:ring-2 focus:ring-teal-600 text-sm"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-800 text-stone-900 dark:text-stone-100 placeholder-stone-400 dark:placeholder-stone-500 focus:outline-none focus:ring-2 focus:ring-teal-600 text-sm"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-stone-700 uppercase tracking-wide mb-1.5">
+                <label className="block text-xs font-semibold text-stone-700 dark:text-stone-300 uppercase tracking-wide mb-1.5">
                   Age (optional)
                 </label>
                 <input
@@ -258,13 +287,13 @@ export const OnboardingView: React.FC = () => {
                   value={age}
                   onChange={e => setAge(Number(e.target.value))}
                   placeholder="e.g. 26"
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-stone-300 focus:outline-none focus:ring-2 focus:ring-teal-600 text-sm"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-800 text-stone-900 dark:text-stone-100 placeholder-stone-400 dark:placeholder-stone-500 focus:outline-none focus:ring-2 focus:ring-teal-600 text-sm"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-stone-700 uppercase tracking-wide mb-1.5">
+              <label className="block text-xs font-semibold text-stone-700 dark:text-stone-300 uppercase tracking-wide mb-1.5">
                 One-Sentence Vibe or Headline
               </label>
               <input
@@ -272,12 +301,12 @@ export const OnboardingView: React.FC = () => {
                 value={headline}
                 onChange={e => setHeadline(e.target.value)}
                 placeholder="e.g. UX Researcher & weekend ceramicist seeking kindred spirits"
-                className="w-full px-3.5 py-2.5 rounded-xl border border-stone-300 focus:outline-none focus:ring-2 focus:ring-teal-600 text-sm"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-800 text-stone-900 dark:text-stone-100 placeholder-stone-400 dark:placeholder-stone-500 focus:outline-none focus:ring-2 focus:ring-teal-600 text-sm"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-stone-700 uppercase tracking-wide mb-1.5">
+              <label className="block text-xs font-semibold text-stone-700 dark:text-stone-300 uppercase tracking-wide mb-1.5">
                 Short Bio / What you appreciate in others
               </label>
               <textarea
@@ -285,7 +314,7 @@ export const OnboardingView: React.FC = () => {
                 value={bio}
                 onChange={e => setBio(e.target.value)}
                 placeholder="Share a little bit about what makes you happy, favorite weekend routines, or what kind of conversations you enjoy..."
-                className="w-full px-3.5 py-2.5 rounded-xl border border-stone-300 focus:outline-none focus:ring-2 focus:ring-teal-600 text-sm"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-800 text-stone-900 dark:text-stone-100 placeholder-stone-400 dark:placeholder-stone-500 focus:outline-none focus:ring-2 focus:ring-teal-600 text-sm"
               />
             </div>
           </div>
@@ -294,7 +323,7 @@ export const OnboardingView: React.FC = () => {
         {/* STEP 2: Intentions */}
         {step === 2 && (
           <div className="space-y-4">
-            <p className="text-sm text-stone-600">
+            <p className="text-sm text-stone-600 dark:text-stone-400">
               Clear intentions eliminate guesswork. Select all intentions that apply to you:
             </p>
 
@@ -334,21 +363,21 @@ export const OnboardingView: React.FC = () => {
                     onClick={() => toggleIntention(item.id)}
                     className={`p-4 rounded-xl border text-left transition-all ${
                       isSelected
-                        ? 'border-teal-600 bg-teal-50/70 shadow-2xs'
-                        : 'border-stone-200 hover:border-stone-300 bg-stone-50/40'
+                        ? 'border-teal-600 dark:border-teal-500 bg-teal-50/70 dark:bg-teal-950/50 shadow-2xs'
+                        : 'border-stone-200 dark:border-stone-800 hover:border-stone-300 dark:hover:border-stone-700 bg-stone-50/40 dark:bg-stone-800/40'
                     }`}
                   >
                     <div className="flex items-center justify-between mb-1.5">
-                      <span className="font-bold text-sm text-stone-900">{item.title}</span>
+                      <span className="font-bold text-sm text-stone-900 dark:text-stone-100">{item.title}</span>
                       <div
                         className={`w-5 h-5 rounded-md flex items-center justify-center text-xs ${
-                          isSelected ? 'bg-teal-600 text-white' : 'border border-stone-300'
+                          isSelected ? 'bg-teal-600 text-white' : 'border border-stone-300 dark:border-stone-600'
                         }`}
                       >
                         {isSelected && <Check className="w-3.5 h-3.5" />}
                       </div>
                     </div>
-                    <p className="text-xs text-stone-600 leading-relaxed">{item.desc}</p>
+                    <p className="text-xs text-stone-600 dark:text-stone-400 leading-relaxed">{item.desc}</p>
                   </button>
                 );
               })}
@@ -360,10 +389,10 @@ export const OnboardingView: React.FC = () => {
         {step === 3 && (
           <div className="space-y-5">
             <div className="flex items-center justify-between">
-              <p className="text-sm text-stone-600">
+              <p className="text-sm text-stone-600 dark:text-stone-400">
                 Choose your favorite passions ({interests.length} selected):
               </p>
-              <span className="text-xs text-teal-800 font-semibold bg-teal-50 px-2 py-0.5 rounded-md">
+              <span className="text-xs text-teal-800 dark:text-teal-300 font-semibold bg-teal-50 dark:bg-teal-950/60 px-2 py-0.5 rounded-md border border-teal-200 dark:border-teal-800">
                 Weights 40% of compatibility
               </span>
             </div>
@@ -378,8 +407,8 @@ export const OnboardingView: React.FC = () => {
                     onClick={() => toggleInterest(tag)}
                     className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
                       isSelected
-                        ? 'bg-teal-700 text-white shadow-2xs'
-                        : 'bg-stone-100 hover:bg-stone-200 text-stone-700'
+                        ? 'bg-teal-700 dark:bg-teal-600 text-white shadow-2xs'
+                        : 'bg-stone-100 dark:bg-stone-800 hover:bg-stone-200 dark:hover:bg-stone-700 text-stone-700 dark:text-stone-300'
                     }`}
                   >
                     {isSelected ? '✓ ' : '+ '}
@@ -390,17 +419,17 @@ export const OnboardingView: React.FC = () => {
             </div>
 
             {/* Custom Interest Input */}
-            <form onSubmit={addCustomInterest} className="flex gap-2 pt-2 border-t border-stone-200">
+            <form onSubmit={addCustomInterest} className="flex gap-2 pt-2 border-t border-stone-200 dark:border-stone-800">
               <input
                 type="text"
                 value={customInterest}
                 onChange={e => setCustomInterest(e.target.value)}
                 placeholder="Don't see your hobby? Add custom interest..."
-                className="flex-1 px-3 py-2 rounded-xl border border-stone-300 text-xs focus:outline-none focus:ring-2 focus:ring-teal-600"
+                className="flex-1 px-3 py-2 rounded-xl border border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-800 text-stone-900 dark:text-stone-100 placeholder-stone-400 dark:placeholder-stone-500 text-xs focus:outline-none focus:ring-2 focus:ring-teal-600"
               />
               <button
                 type="submit"
-                className="px-3.5 py-2 bg-stone-900 text-white text-xs font-semibold rounded-xl hover:bg-stone-800"
+                className="px-3.5 py-2 bg-stone-900 dark:bg-teal-600 text-white text-xs font-semibold rounded-xl hover:bg-stone-800 dark:hover:bg-teal-500 transition-colors"
               >
                 Add
               </button>
@@ -412,10 +441,10 @@ export const OnboardingView: React.FC = () => {
         {step === 4 && (
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <p className="text-sm text-stone-600">
+              <p className="text-sm text-stone-600 dark:text-stone-400">
                 Shared values build enduring connections ({values.length} selected):
               </p>
-              <span className="text-xs text-teal-800 font-semibold bg-teal-50 px-2 py-0.5 rounded-md">
+              <span className="text-xs text-teal-800 dark:text-teal-300 font-semibold bg-teal-50 dark:bg-teal-950/60 px-2 py-0.5 rounded-md border border-teal-200 dark:border-teal-800">
                 Weights 20% of compatibility
               </span>
             </div>
@@ -430,12 +459,12 @@ export const OnboardingView: React.FC = () => {
                     onClick={() => toggleValue(val)}
                     className={`p-3 rounded-xl border text-left text-xs font-medium flex items-center justify-between transition-all ${
                       isSelected
-                        ? 'border-purple-500 bg-purple-50/70 text-purple-950 font-semibold'
-                        : 'border-stone-200 hover:border-stone-300 text-stone-700'
+                        ? 'border-purple-500 dark:border-purple-400 bg-purple-50/70 dark:bg-purple-950/50 text-purple-950 dark:text-purple-200 font-semibold'
+                        : 'border-stone-200 dark:border-stone-800 hover:border-stone-300 dark:hover:border-stone-700 text-stone-700 dark:text-stone-300 bg-white dark:bg-stone-800/40'
                     }`}
                   >
                     <span>{val}</span>
-                    {isSelected && <Check className="w-4 h-4 text-purple-700" />}
+                    {isSelected && <Check className="w-4 h-4 text-purple-700 dark:text-purple-400" />}
                   </button>
                 );
               })}
@@ -446,13 +475,13 @@ export const OnboardingView: React.FC = () => {
         {/* STEP 5: Communication Preferences */}
         {step === 5 && (
           <div className="space-y-6">
-            <p className="text-sm text-stone-600">
+            <p className="text-sm text-stone-600 dark:text-stone-400">
               Honoring communication pacing reduces social anxiety and boundary clashes.
             </p>
 
             {/* Pace */}
             <div>
-              <label className="block text-xs font-semibold text-stone-700 uppercase tracking-wide mb-2">
+              <label className="block text-xs font-semibold text-stone-700 dark:text-stone-300 uppercase tracking-wide mb-2">
                 Preferred Interaction Pace
               </label>
               <div className="grid sm:grid-cols-3 gap-2.5">
@@ -479,12 +508,12 @@ export const OnboardingView: React.FC = () => {
                     onClick={() => setPace(opt.id)}
                     className={`p-3 rounded-xl border text-left transition-all ${
                       pace === opt.id
-                        ? 'border-teal-600 bg-teal-50/70 text-teal-950 font-medium'
-                        : 'border-stone-200 text-stone-700'
+                        ? 'border-teal-600 dark:border-teal-500 bg-teal-50/70 dark:bg-teal-950/50 text-teal-950 dark:text-teal-200 font-medium'
+                        : 'border-stone-200 dark:border-stone-800 text-stone-700 dark:text-stone-300 bg-white dark:bg-stone-800/40'
                     }`}
                   >
                     <span className="block font-bold text-xs">{opt.title}</span>
-                    <span className="block text-[11px] text-stone-500 mt-1">{opt.desc}</span>
+                    <span className="block text-[11px] text-stone-500 dark:text-stone-400 mt-1">{opt.desc}</span>
                   </button>
                 ))}
               </div>
@@ -492,7 +521,7 @@ export const OnboardingView: React.FC = () => {
 
             {/* Style */}
             <div>
-              <label className="block text-xs font-semibold text-stone-700 uppercase tracking-wide mb-2">
+              <label className="block text-xs font-semibold text-stone-700 dark:text-stone-300 uppercase tracking-wide mb-2">
                 Conversation Focus
               </label>
               <div className="grid sm:grid-cols-2 gap-2.5">
@@ -524,12 +553,12 @@ export const OnboardingView: React.FC = () => {
                     onClick={() => setStyle(opt.id)}
                     className={`p-3 rounded-xl border text-left transition-all ${
                       style === opt.id
-                        ? 'border-teal-600 bg-teal-50/70 text-teal-950 font-medium'
-                        : 'border-stone-200 text-stone-700'
+                        ? 'border-teal-600 dark:border-teal-500 bg-teal-50/70 dark:bg-teal-950/50 text-teal-950 dark:text-teal-200 font-medium'
+                        : 'border-stone-200 dark:border-stone-800 text-stone-700 dark:text-stone-300 bg-white dark:bg-stone-800/40'
                     }`}
                   >
                     <span className="block font-bold text-xs">{opt.title}</span>
-                    <span className="block text-[11px] text-stone-500 mt-1">{opt.desc}</span>
+                    <span className="block text-[11px] text-stone-500 dark:text-stone-400 mt-1">{opt.desc}</span>
                   </button>
                 ))}
               </div>
@@ -537,7 +566,7 @@ export const OnboardingView: React.FC = () => {
 
             {/* Social Energy */}
             <div>
-              <label className="block text-xs font-semibold text-stone-700 uppercase tracking-wide mb-2">
+              <label className="block text-xs font-semibold text-stone-700 dark:text-stone-300 uppercase tracking-wide mb-2">
                 Social Energy / Battery
               </label>
               <div className="grid sm:grid-cols-3 gap-2.5">
@@ -552,8 +581,8 @@ export const OnboardingView: React.FC = () => {
                     onClick={() => setSocialEnergy(opt.id)}
                     className={`p-2.5 text-center rounded-xl border text-xs font-medium transition-all ${
                       socialEnergy === opt.id
-                        ? 'border-teal-600 bg-teal-50 text-teal-900 font-bold'
-                        : 'border-stone-200 text-stone-700'
+                        ? 'border-teal-600 dark:border-teal-500 bg-teal-50 dark:bg-teal-950/60 text-teal-900 dark:text-teal-200 font-bold'
+                        : 'border-stone-200 dark:border-stone-800 text-stone-700 dark:text-stone-300 bg-white dark:bg-stone-800/40'
                     }`}
                   >
                     {opt.label}
@@ -567,15 +596,15 @@ export const OnboardingView: React.FC = () => {
         {/* STEP 6: Privacy & Boundary Setup */}
         {step === 6 && (
           <div className="space-y-5">
-            <p className="text-sm text-stone-600">
+            <p className="text-sm text-stone-600 dark:text-stone-400">
               You are always in control of when and how people discover you.
             </p>
 
             <div className="space-y-3">
-              <div className="p-4 rounded-xl border border-stone-200 bg-stone-50/50 flex items-center justify-between">
+              <div className="p-4 rounded-xl border border-stone-200 dark:border-stone-800 bg-stone-50/50 dark:bg-stone-800/40 flex items-center justify-between">
                 <div>
-                  <span className="font-bold text-sm text-stone-900 block">Pause Discovery Mode</span>
-                  <span className="text-xs text-stone-500 block mt-0.5">
+                  <span className="font-bold text-sm text-stone-900 dark:text-stone-100 block">Pause Discovery Mode</span>
+                  <span className="text-xs text-stone-500 dark:text-stone-400 block mt-0.5">
                     Temporarily hide your profile from new people when your social battery is full.
                   </span>
                 </div>
@@ -588,7 +617,7 @@ export const OnboardingView: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-stone-700 uppercase tracking-wide mb-2">
+                <label className="block text-xs font-semibold text-stone-700 dark:text-stone-300 uppercase tracking-wide mb-2">
                   Who Can Discover Your Profile
                 </label>
                 <div className="space-y-2">
@@ -610,19 +639,19 @@ export const OnboardingView: React.FC = () => {
                       onClick={() => setVisibility(opt.id as any)}
                       className={`w-full p-3 rounded-xl border text-left transition-all ${
                         visibility === opt.id
-                          ? 'border-teal-600 bg-teal-50/70 font-medium'
-                          : 'border-stone-200 text-stone-700'
+                          ? 'border-teal-600 dark:border-teal-500 bg-teal-50/70 dark:bg-teal-950/50 font-medium'
+                          : 'border-stone-200 dark:border-stone-800 text-stone-700 dark:text-stone-300 bg-white dark:bg-stone-800/40'
                       }`}
                     >
-                      <span className="block font-bold text-xs text-stone-900">{opt.title}</span>
-                      <span className="block text-[11px] text-stone-500 mt-0.5">{opt.desc}</span>
+                      <span className="block font-bold text-xs text-stone-900 dark:text-stone-100">{opt.title}</span>
+                      <span className="block text-[11px] text-stone-500 dark:text-stone-400 mt-0.5">{opt.desc}</span>
                     </button>
                   ))}
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-stone-700 uppercase tracking-wide mb-2">
+                <label className="block text-xs font-semibold text-stone-700 dark:text-stone-300 uppercase tracking-wide mb-2">
                   Introduction Barrier Requirement
                 </label>
                 <div className="space-y-2">
@@ -649,18 +678,18 @@ export const OnboardingView: React.FC = () => {
                       onClick={() => setIntroRequirement(opt.id as any)}
                       className={`w-full p-3 rounded-xl border text-left transition-all ${
                         introRequirement === opt.id
-                          ? 'border-teal-600 bg-teal-50/70 font-medium'
-                          : 'border-stone-200 text-stone-700'
+                          ? 'border-teal-600 dark:border-teal-500 bg-teal-50/70 dark:bg-teal-950/50 font-medium'
+                          : 'border-stone-200 dark:border-stone-800 text-stone-700 dark:text-stone-300 bg-white dark:bg-stone-800/40'
                       }`}
                     >
-                      <span className="block font-bold text-xs text-stone-900">{opt.title}</span>
-                      <span className="block text-[11px] text-stone-500 mt-0.5">{opt.desc}</span>
+                      <span className="block font-bold text-xs text-stone-900 dark:text-stone-100">{opt.title}</span>
+                      <span className="block text-[11px] text-stone-500 dark:text-stone-400 mt-0.5">{opt.desc}</span>
                     </button>
                   ))}
                 </div>
               </div>
 
-              <div className="p-4 rounded-xl bg-teal-50/80 border border-teal-200 text-xs text-teal-900 leading-relaxed space-y-1">
+              <div className="p-4 rounded-xl bg-teal-50/80 dark:bg-teal-950/50 border border-teal-200 dark:border-teal-800 text-xs text-teal-900 dark:text-teal-200 leading-relaxed space-y-1">
                 <span className="font-bold block">🔒 The CommonGround Safety Promise</span>
                 <p>
                   No unsolicited messages. No public rejection counts. You can block or pause anytime with dignity.
@@ -676,7 +705,7 @@ export const OnboardingView: React.FC = () => {
         <button
           type="button"
           onClick={handleBack}
-          className="flex items-center gap-2 px-5 py-2.5 rounded-xl border border-stone-300 text-stone-700 text-sm font-semibold hover:bg-stone-50 transition-colors"
+          className="flex items-center gap-2 px-5 py-2.5 rounded-xl border border-stone-300 dark:border-stone-700 text-stone-700 dark:text-stone-300 text-sm font-semibold hover:bg-stone-50 dark:hover:bg-stone-800 transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
           <span>{step === 1 ? 'Cancel' : 'Back'}</span>
@@ -685,7 +714,7 @@ export const OnboardingView: React.FC = () => {
         <button
           type="button"
           onClick={handleNext}
-          className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-stone-900 hover:bg-stone-800 text-white text-sm font-semibold shadow-md transition-all"
+          className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-stone-900 dark:bg-teal-600 hover:bg-stone-800 dark:hover:bg-teal-500 text-white text-sm font-semibold shadow-md transition-all"
         >
           <span>{step === totalSteps ? 'Complete & Start Discovery' : 'Continue'}</span>
           <ArrowRight className="w-4 h-4" />

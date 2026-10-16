@@ -123,6 +123,7 @@ export interface ReportRecord {
 
 export type ActiveTab =
   | 'landing'
+  | 'overview'
   | 'onboarding'
   | 'discovery'
   | 'requests'

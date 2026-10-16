@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
+import { ThemeProvider } from './context/ThemeContext';
 import { AppProvider } from './context/AppContext';
 import { AppLayout } from './components/shared/AppLayout';
 import { AppModuleId } from './components/shared/ModuleNavigation';
@@ -99,9 +100,11 @@ const AppShell: React.FC = () => {
 export default function App() {
   return (
     <BrowserRouter>
-      <AppProvider>
-        <AppShell />
-      </AppProvider>
+      <ThemeProvider>
+        <AppProvider>
+          <AppShell />
+        </AppProvider>
+      </ThemeProvider>
     </BrowserRouter>
   );
 }

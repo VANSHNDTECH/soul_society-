@@ -42,7 +42,7 @@ export const WhyMatchModal: React.FC = () => {
 
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto bg-stone-900/60 backdrop-blur-xs flex items-center justify-center p-4">
-      <div className="relative bg-white rounded-3xl max-w-xl w-full shadow-2xl border border-stone-200 overflow-hidden text-left animate-in fade-in zoom-in-95 duration-200">
+      <div className="relative bg-white dark:bg-stone-900 rounded-3xl max-w-xl w-full shadow-2xl border border-stone-200 dark:border-stone-800 overflow-hidden text-left animate-in fade-in zoom-in-95 duration-200">
         {/* Header */}
         <div className="p-6 bg-gradient-to-r from-teal-900 via-stone-900 to-teal-950 text-white flex items-start justify-between">
           <div className="flex items-center gap-3">
@@ -72,31 +72,31 @@ export const WhyMatchModal: React.FC = () => {
 
         <div className="p-6 space-y-6 max-h-[75vh] overflow-y-auto">
           {/* Data Classification Badge */}
-          <div className="flex items-center justify-between p-3 rounded-xl bg-stone-50 border border-stone-200 text-xs">
-            <span className="font-semibold text-stone-700">Profile Source:</span>
+          <div className="flex items-center justify-between p-3 rounded-xl bg-stone-50 dark:bg-stone-800/60 border border-stone-200 dark:border-stone-800 text-xs">
+            <span className="font-semibold text-stone-700 dark:text-stone-300">Profile Source:</span>
             {comp.isDemoProfile ? (
-              <span className="px-2.5 py-1 rounded-md bg-amber-100 text-amber-900 font-bold text-[11px] flex items-center gap-1">
-                <Info className="w-3.5 h-3.5 text-amber-700" />
+              <span className="px-2.5 py-1 rounded-md bg-amber-100 dark:bg-amber-950/60 text-amber-900 dark:text-amber-200 font-bold text-[11px] flex items-center gap-1">
+                <Info className="w-3.5 h-3.5 text-amber-700 dark:text-amber-400" />
                 <span>Illustrative Community Archetype (Demo)</span>
               </span>
             ) : (
-              <span className="px-2.5 py-1 rounded-md bg-emerald-100 text-emerald-900 font-bold text-[11px] flex items-center gap-1">
-                <ShieldCheck className="w-3.5 h-3.5 text-emerald-700" />
+              <span className="px-2.5 py-1 rounded-md bg-emerald-100 dark:bg-emerald-950/60 text-emerald-900 dark:text-emerald-200 font-bold text-[11px] flex items-center gap-1">
+                <ShieldCheck className="w-3.5 h-3.5 text-emerald-700 dark:text-emerald-400" />
                 <span>Verified Registered Member (Live Database)</span>
               </span>
             )}
           </div>
 
           {/* Alignment Score Breakdown */}
-          <div className="bg-stone-50 rounded-2xl p-5 border border-stone-200 flex items-center justify-between">
+          <div className="bg-stone-50 dark:bg-stone-800/60 rounded-2xl p-5 border border-stone-200 dark:border-stone-800 flex items-center justify-between">
             <div>
-              <span className="text-[10px] uppercase font-bold tracking-wider text-teal-800 bg-teal-100 px-2 py-0.5 rounded-md">
+              <span className="text-[10px] uppercase font-bold tracking-wider text-teal-800 dark:text-teal-300 bg-teal-100 dark:bg-teal-950/60 px-2 py-0.5 rounded-md">
                 Common Ground Index
               </span>
-              <h3 className="text-2xl font-extrabold text-stone-900 mt-1 font-heading">
+              <h3 className="text-2xl font-extrabold text-stone-900 dark:text-stone-100 mt-1 font-heading">
                 {comp.totalScore}% Alignment
               </h3>
-              <p className="text-xs text-stone-500 mt-0.5">
+              <p className="text-xs text-stone-500 dark:text-stone-400 mt-0.5">
                 Calculated deterministically from 4 configurable factors.
               </p>
             </div>
@@ -108,7 +108,7 @@ export const WhyMatchModal: React.FC = () => {
 
           {/* Actual Factors Contributing */}
           <div className="space-y-3">
-            <h4 className="text-xs font-bold uppercase tracking-wider text-stone-700">
+            <h4 className="text-xs font-bold uppercase tracking-wider text-stone-700 dark:text-stone-300">
               Factors That Influenced This Suggestion:
             </h4>
             <div className="space-y-2">
@@ -116,33 +116,33 @@ export const WhyMatchModal: React.FC = () => {
                 comp.activeFactors.map((factor, idx) => (
                   <div
                     key={idx}
-                    className="p-3 rounded-xl border border-emerald-200 bg-emerald-50/50 flex items-center justify-between text-xs text-emerald-950 font-medium"
+                    className="p-3 rounded-xl border border-emerald-200 dark:border-emerald-800 bg-emerald-50/50 dark:bg-emerald-950/40 flex items-center justify-between text-xs text-emerald-950 dark:text-emerald-200 font-medium"
                   >
                     <span className="flex items-center gap-2">
-                      <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                      <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
                       <span>{factor}</span>
                     </span>
-                    <span className="text-[10px] bg-emerald-200/80 text-emerald-900 font-bold px-2 py-0.5 rounded">
+                    <span className="text-[10px] bg-emerald-200/80 dark:bg-emerald-900/60 text-emerald-900 dark:text-emerald-200 font-bold px-2 py-0.5 rounded">
                       Influencing
                     </span>
                   </div>
                 ))
               ) : (
-                <p className="text-xs text-stone-500 italic">No direct positive factors active.</p>
+                <p className="text-xs text-stone-500 dark:text-stone-400 italic">No direct positive factors active.</p>
               )}
 
               {comp.inactiveFactors && comp.inactiveFactors.length > 0 && (
                 <div className="pt-1 space-y-1.5">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-stone-400">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-stone-400 dark:text-stone-500">
                     Excluded by Your OpenSignals Preferences:
                   </span>
                   {comp.inactiveFactors.map((factor, idx) => (
                     <div
                       key={idx}
-                      className="p-2.5 rounded-xl border border-stone-200 bg-stone-50 text-[11px] text-stone-500 flex items-center justify-between"
+                      className="p-2.5 rounded-xl border border-stone-200 dark:border-stone-700 bg-stone-50 dark:bg-stone-800 text-[11px] text-stone-500 dark:text-stone-400 flex items-center justify-between"
                     >
                       <span>{factor}</span>
-                      <span className="text-[10px] bg-stone-200 text-stone-600 px-1.5 py-0.5 rounded">
+                      <span className="text-[10px] bg-stone-200 dark:bg-stone-700 text-stone-600 dark:text-stone-300 px-1.5 py-0.5 rounded">
                         Ignored
                       </span>
                     </div>
@@ -154,19 +154,19 @@ export const WhyMatchModal: React.FC = () => {
 
           {/* Detailed 4 Dimensions */}
           <div className="space-y-3 pt-2">
-            <h4 className="text-xs font-bold uppercase tracking-wider text-stone-700">
+            <h4 className="text-xs font-bold uppercase tracking-wider text-stone-700 dark:text-stone-300">
               Factor Weight Breakdown:
             </h4>
 
             {/* 1. Shared Interests */}
-            <div className="p-3.5 rounded-xl border border-stone-200 bg-white space-y-1.5 text-xs">
+            <div className="p-3.5 rounded-xl border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-800 space-y-1.5 text-xs">
               <div className="flex items-center justify-between">
-                <span className="font-bold text-stone-900">1. Shared Interests (40% Weight)</span>
-                <span className="font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded">
+                <span className="font-bold text-stone-900 dark:text-stone-100">1. Shared Interests (40% Weight)</span>
+                <span className="font-bold text-emerald-800 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded">
                   {comp.interestScore} / 40 pts
                 </span>
               </div>
-              <p className="text-stone-600 text-[11px]">
+              <p className="text-stone-600 dark:text-stone-300 text-[11px]">
                 {comp.sharedInterests.length > 0
                   ? `Overlapping topics: ${comp.sharedInterests.join(', ')}.`
                   : 'No direct tag overlap.'}
@@ -174,14 +174,14 @@ export const WhyMatchModal: React.FC = () => {
             </div>
 
             {/* 2. Compatible Intentions */}
-            <div className="p-3.5 rounded-xl border border-stone-200 bg-white space-y-1.5 text-xs">
+            <div className="p-3.5 rounded-xl border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-800 space-y-1.5 text-xs">
               <div className="flex items-center justify-between">
-                <span className="font-bold text-stone-900">2. Stated Intentions (30% Weight)</span>
-                <span className="font-bold text-teal-800 bg-teal-50 px-2 py-0.5 rounded">
+                <span className="font-bold text-stone-900 dark:text-stone-100">2. Stated Intentions (30% Weight)</span>
+                <span className="font-bold text-teal-800 dark:text-teal-300 bg-teal-50 dark:bg-teal-950/60 px-2 py-0.5 rounded">
                   {comp.intentionScore} / 30 pts
                 </span>
               </div>
-              <p className="text-stone-600 text-[11px]">
+              <p className="text-stone-600 dark:text-stone-300 text-[11px]">
                 {comp.sharedIntentions.length > 0
                   ? `Both seeking: ${comp.sharedIntentions.join(' & ')}.`
                   : 'Different stated goals.'}
@@ -189,14 +189,14 @@ export const WhyMatchModal: React.FC = () => {
             </div>
 
             {/* 3. Shared Values */}
-            <div className="p-3.5 rounded-xl border border-stone-200 bg-white space-y-1.5 text-xs">
+            <div className="p-3.5 rounded-xl border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-800 space-y-1.5 text-xs">
               <div className="flex items-center justify-between">
-                <span className="font-bold text-stone-900">3. Shared Values (20% Weight)</span>
-                <span className="font-bold text-purple-800 bg-purple-50 px-2 py-0.5 rounded">
+                <span className="font-bold text-stone-900 dark:text-stone-100">3. Shared Values (20% Weight)</span>
+                <span className="font-bold text-purple-800 dark:text-purple-300 bg-purple-50 dark:bg-purple-950/60 px-2 py-0.5 rounded">
                   {comp.valueScore} / 20 pts
                 </span>
               </div>
-              <p className="text-stone-600 text-[11px]">
+              <p className="text-stone-600 dark:text-stone-300 text-[11px]">
                 {comp.sharedValues.length > 0
                   ? `Mutual values: ${comp.sharedValues.join(', ')}.`
                   : 'Different primary values.'}
@@ -204,26 +204,26 @@ export const WhyMatchModal: React.FC = () => {
             </div>
 
             {/* 4. Communication Preferences */}
-            <div className="p-3.5 rounded-xl border border-stone-200 bg-white space-y-1.5 text-xs">
+            <div className="p-3.5 rounded-xl border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-800 space-y-1.5 text-xs">
               <div className="flex items-center justify-between">
-                <span className="font-bold text-stone-900">4. Pacing & Style (10% Weight)</span>
-                <span className="font-bold text-amber-800 bg-amber-50 px-2 py-0.5 rounded">
+                <span className="font-bold text-stone-900 dark:text-stone-100">4. Pacing & Style (10% Weight)</span>
+                <span className="font-bold text-amber-800 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/60 px-2 py-0.5 rounded">
                   {comp.communicationScore} / 10 pts
                 </span>
               </div>
-              <p className="text-stone-600 text-[11px]">
+              <p className="text-stone-600 dark:text-stone-300 text-[11px]">
                 Pace match: {comp.paceMatch ? `Both prefer "${currentUser.communicationPreferences.pace}"` : 'Different pacing'}
               </p>
             </div>
           </div>
 
           {/* Critical OpenSignals Reality Guarantees */}
-          <div className="p-4 rounded-2xl bg-teal-50/80 border border-teal-200 text-xs text-teal-950 space-y-2">
-            <div className="flex items-center gap-2 font-bold text-teal-900">
-              <Scale className="w-4 h-4 text-teal-700" />
+          <div className="p-4 rounded-2xl bg-teal-50/80 dark:bg-teal-950/40 border border-teal-200 dark:border-teal-800 text-xs text-teal-950 dark:text-teal-200 space-y-2">
+            <div className="flex items-center gap-2 font-bold text-teal-900 dark:text-teal-300">
+              <Scale className="w-4 h-4 text-teal-700 dark:text-teal-400" />
               <span>OpenSignals Reality Disclosures:</span>
             </div>
-            <ul className="list-disc pl-4 space-y-1 text-stone-700 text-[11px] leading-relaxed">
+            <ul className="list-disc pl-4 space-y-1 text-stone-700 dark:text-stone-300 text-[11px] leading-relaxed">
               <li>
                 <strong>Interest overlap ≠ Chemistry:</strong> Shared interests establish common ground to start talking, but they do not guarantee emotional connection.
               </li>
@@ -238,28 +238,28 @@ export const WhyMatchModal: React.FC = () => {
         </div>
 
         {/* Modal Footer Controls */}
-        <div className="p-4 bg-stone-100 border-t border-stone-200 flex flex-col sm:flex-row items-center justify-between gap-3">
+        <div className="p-4 bg-stone-100 dark:bg-stone-850 border-t border-stone-200 dark:border-stone-800 flex flex-col sm:flex-row items-center justify-between gap-3">
           <div className="flex items-center gap-2 w-full sm:w-auto">
             <button
               onClick={handleDismiss}
-              className="px-3.5 py-2 rounded-xl border border-stone-300 hover:bg-stone-200 text-xs font-semibold text-stone-700 flex items-center justify-center gap-1.5 transition-colors w-full sm:w-auto"
+              className="px-3.5 py-2 rounded-xl border border-stone-300 dark:border-stone-700 hover:bg-stone-200 dark:hover:bg-stone-800 text-xs font-semibold text-stone-700 dark:text-stone-300 flex items-center justify-center gap-1.5 transition-colors w-full sm:w-auto"
               title="Hide this recommendation from your current session"
             >
-              <UserX className="w-3.5 h-3.5 text-stone-500" />
+              <UserX className="w-3.5 h-3.5 text-stone-500 dark:text-stone-400" />
               <span>Dismiss Recommendation</span>
             </button>
             <button
               onClick={handleGoToSettings}
-              className="px-3.5 py-2 rounded-xl border border-teal-300 bg-teal-50 hover:bg-teal-100 text-xs font-semibold text-teal-900 flex items-center justify-center gap-1.5 transition-colors w-full sm:w-auto"
+              className="px-3.5 py-2 rounded-xl border border-teal-300 dark:border-teal-800 bg-teal-50 dark:bg-teal-950/60 hover:bg-teal-100 dark:hover:bg-teal-900/60 text-xs font-semibold text-teal-900 dark:text-teal-200 flex items-center justify-center gap-1.5 transition-colors w-full sm:w-auto"
             >
-              <Sliders className="w-3.5 h-3.5 text-teal-700" />
+              <Sliders className="w-3.5 h-3.5 text-teal-700 dark:text-teal-400" />
               <span>Adjust Influence Rules</span>
             </button>
           </div>
 
           <button
             onClick={() => setWhyMatchUser(null)}
-            className="px-5 py-2 rounded-xl bg-stone-900 text-white text-xs font-semibold hover:bg-stone-800 transition-colors w-full sm:w-auto text-center"
+            className="px-5 py-2 rounded-xl bg-stone-900 dark:bg-teal-600 text-white text-xs font-semibold hover:bg-stone-800 dark:hover:bg-teal-500 transition-colors w-full sm:w-auto text-center"
           >
             Understood
           </button>
