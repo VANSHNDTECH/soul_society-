@@ -1,14 +1,21 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+// Safe fallback across browser (import.meta.env) and Node.js test runners
+const globalObj = typeof globalThis !== 'undefined' ? (globalThis as unknown as { process?: { env?: Record<string, string | undefined> } }) : undefined;
+const nodeEnv = globalObj?.process?.env;
+const env = (typeof import.meta !== 'undefined' && import.meta.env) 
+  ? import.meta.env 
+  : (nodeEnv || {}) as Record<string, string | undefined>;
+
+const supabaseUrl = env?.VITE_SUPABASE_URL;
+const supabaseAnonKey = env?.VITE_SUPABASE_ANON_KEY;
 
 export const isSupabaseConfigured = (): boolean => {
   return Boolean(
     supabaseUrl &&
     supabaseAnonKey &&
     supabaseUrl !== 'https://your-project-id.supabase.co' &&
-    supabaseAnonKey !== 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...' &&
+    !supabaseAnonKey.includes('placeholder') &&
     supabaseUrl.startsWith('https://')
   );
 };

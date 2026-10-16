@@ -17,7 +17,7 @@ import {
   INITIAL_CONNECTIONS,
   INITIAL_MESSAGES,
 } from '../data/mockUsers';
-import { authService, AuthSession } from '../services/authService';
+import { authService } from '../services/authService';
 import { connectionService } from '../services/connectionService';
 import { chatService } from '../services/chatService';
 import { safetyService } from '../services/safetyService';
@@ -141,6 +141,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   });
 
   const [userRole, setUserRole] = useState<'user' | 'editor' | 'moderator' | 'admin'>('user');
+  const [dbDiscoverableUsers, setDbDiscoverableUsers] = useState<User[]>([]);
   const [activePersonaId, setActivePersonaId] = useState<string>('user-current-maya');
   const [activeTab, setActiveTab] = useState<ActiveTab>('landing');
 
@@ -269,9 +270,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             initialIcebreaker: 'Connected via mutual introduction on CommonGround',
           }));
           setConnections(mappedConns);
-          if (!activeConnectionId && mappedConns.length > 0) {
-            setActiveConnectionId(mappedConns[0].id);
-          }
+          setActiveConnectionId(prev => prev || (mappedConns[0]?.id || null));
         }
 
         // Load blocked users
@@ -279,11 +278,50 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         if (blockedList.length > 0) {
           setBlockedUserIds(blockedList);
         }
+
+        // Load discoverable profiles from database
+        try {
+          const profiles = await discoveryService.getDiscoverableProfiles(
+            session.user.id,
+            session.profile || undefined,
+            session.profile?.intentions
+          );
+          if (profiles && profiles.length > 0) {
+            const mappedUsers: User[] = profiles.map(p => ({
+              id: p.profile.id,
+              name: p.profile.display_name,
+              age: p.profile.age || 22,
+              headline: p.profile.bio ? p.profile.bio.slice(0, 70) + '...' : 'CommonGround Member',
+              bio: p.profile.bio || 'Exploring meaningful connections on CommonGround.',
+              location: p.profile.location || 'Campus / Local',
+              avatar: p.profile.avatar_url || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80',
+              avatarColor: 'from-teal-600 to-emerald-700',
+              interests: p.interests.length > 0 ? p.interests : ['Specialty Coffee', 'Indie Games'],
+              intentions: (p.profile.intentions as IntentionType[]) || ['Friendship'],
+              values: ['Intellectual Curiosity', 'Authenticity', 'Kindness'],
+              communicationPreferences: {
+                pace: (p.profile.pace_preference as any) || 'Gradual & thoughtful',
+                style: (p.profile.communication_style as any) || 'Deep & reflective',
+                socialEnergy: (p.profile.social_energy as any) || 'Ambivert / Adaptable',
+              },
+              privacySettings: {
+                discoveryPaused: !p.profile.discovery_enabled,
+                visibility: p.profile.profile_visibility === 'standard' ? 'public_match' : 'private',
+                showLocation: true,
+                introRequirement: 'shared_intention',
+              },
+              joinedDate: new Date(p.profile.created_at).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }),
+            }));
+            setDbDiscoverableUsers(mappedUsers);
+          }
+        } catch (e) {
+          console.error('Error fetching discovery profiles from database:', e);
+        }
       }
     } catch (err) {
       console.error('Error synchronizing backend data:', err);
     }
-  }, [isBackend, activeConnectionId]);
+  }, [isBackend]);
 
   // Initial mount load
   useEffect(() => {
@@ -455,10 +493,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
 
-  // Discoverable users: exclude blocked users and current user
-  const allUsers = [currentUser, ...MOCK_USERS];
-  const discoverableUsers = MOCK_USERS.filter(
-    u => !blockedUserIds.includes(u.id) && u.id !== currentUser.id
+  // Discoverable users: candidate users from live DB or mock fallback, excluding blocked users and self
+  const candidateUsers = isBackend && dbDiscoverableUsers.length > 0 ? dbDiscoverableUsers : MOCK_USERS;
+  const allUsers = [currentUser, ...candidateUsers];
+  const discoverableUsers = candidateUsers.filter(
+    u => !blockedUserIds.includes(u.id) && u.id !== currentUser.id && !u.privacySettings.discoveryPaused
   );
 
   // Send an introduction invitation

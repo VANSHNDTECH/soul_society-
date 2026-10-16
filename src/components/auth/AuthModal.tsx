@@ -5,13 +5,9 @@ import {
   Mail,
   User,
   ShieldCheck,
-  Database,
   CheckCircle2,
   AlertCircle,
   LogOut,
-  Sparkles,
-  KeyRound,
-  ExternalLink,
 } from 'lucide-react';
 import { authService, AuthSession } from '../../services/authService';
 import { isSupabaseConfigured } from '../../lib/supabase';

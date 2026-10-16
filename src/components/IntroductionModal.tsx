@@ -3,33 +3,40 @@ import { useApp } from '../context/AppContext';
 import {
   X,
   HeartHandshake,
-  Sparkles,
   Send,
-  MessageSquare,
   ShieldCheck,
   Check,
 } from 'lucide-react';
 import { calculateCompatibility, generateSuggestedIcebreakers } from '../utils/compatibility';
+import { User } from '../types';
 
-export const IntroductionModal: React.FC = () => {
-  const { introTargetUser, setIntroTargetUser, currentUser, sendIntroduction } = useApp();
+interface IntroductionDialogContentProps {
+  currentUser: User;
+  targetUser: User;
+  onClose: () => void;
+  onSend: (toUserId: string, prompt: string, message: string, sharedInterest: string) => void;
+}
 
-  if (!introTargetUser) return null;
-
-  const comp = calculateCompatibility(currentUser, introTargetUser);
-  const suggestedPrompts = generateSuggestedIcebreakers(currentUser, introTargetUser);
+const IntroductionDialogContent: React.FC<IntroductionDialogContentProps> = ({
+  currentUser,
+  targetUser,
+  onClose,
+  onSend,
+}) => {
+  const comp = calculateCompatibility(currentUser, targetUser);
+  const suggestedPrompts = generateSuggestedIcebreakers(currentUser, targetUser);
 
   const [selectedPrompt, setSelectedPrompt] = useState<string>(suggestedPrompts[0] || '');
   const [customMessage, setCustomMessage] = useState<string>('');
-  const [selectedSharedInterest, setSelectedSharedInterest] = useState<string>(
-    comp.sharedInterests[0] || introTargetUser.interests[0] || 'Common Ground'
+  const [selectedSharedInterest] = useState<string>(
+    comp.sharedInterests[0] || targetUser.interests[0] || 'Common Ground'
   );
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const finalMessage = customMessage.trim() || selectedPrompt;
-    sendIntroduction(
-      introTargetUser.id,
+    onSend(
+      targetUser.id,
       selectedPrompt,
       finalMessage,
       selectedSharedInterest
@@ -46,7 +53,7 @@ export const IntroductionModal: React.FC = () => {
               <HeartHandshake className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="text-lg font-bold">Invite {introTargetUser.name} to Connect</h2>
+              <h2 className="text-lg font-bold">Invite {targetUser.name} to Connect</h2>
               <p className="text-xs text-stone-300">
                 Low-pressure introduction based on shared interests
               </p>
@@ -54,7 +61,7 @@ export const IntroductionModal: React.FC = () => {
           </div>
 
           <button
-            onClick={() => setIntroTargetUser(null)}
+            onClick={onClose}
             className="p-1 rounded-full bg-white/10 hover:bg-white/20 text-stone-300 hover:text-white transition-colors"
           >
             <X className="w-5 h-5" />
@@ -65,13 +72,13 @@ export const IntroductionModal: React.FC = () => {
           {/* Recipient summary */}
           <div className="p-3.5 rounded-2xl bg-stone-50 border border-stone-200 flex items-center gap-3">
             <img
-              src={introTargetUser.avatar}
-              alt={introTargetUser.name}
+              src={targetUser.avatar}
+              alt={targetUser.name}
               className="w-12 h-12 rounded-xl object-cover ring-1 ring-stone-200"
             />
             <div className="flex-1">
-              <h3 className="text-sm font-bold text-stone-900">{introTargetUser.name}</h3>
-              <p className="text-xs text-stone-500 line-clamp-1">{introTargetUser.headline}</p>
+              <h3 className="text-sm font-bold text-stone-900">{targetUser.name}</h3>
+              <p className="text-xs text-stone-500 line-clamp-1">{targetUser.headline}</p>
               <div className="flex items-center gap-2 mt-1">
                 <span className="text-[10px] font-semibold text-teal-800 bg-teal-50 px-2 py-0.5 rounded-md">
                   {comp.totalScore}% Compatibility
@@ -150,7 +157,7 @@ export const IntroductionModal: React.FC = () => {
               <span>Consent-First Guarantee</span>
             </div>
             <p className="text-[11px] text-teal-800 leading-relaxed">
-              {introTargetUser.name} can accept, decline, or ignore this invitation with zero public notification or penalty. Direct messaging will only unlock if both of you agree.
+              {targetUser.name} can accept, decline, or ignore this invitation with zero public notification or penalty. Direct messaging will only unlock if both of you agree.
             </p>
           </div>
 
@@ -158,7 +165,7 @@ export const IntroductionModal: React.FC = () => {
           <div className="flex items-center justify-end gap-3 pt-2">
             <button
               type="button"
-              onClick={() => setIntroTargetUser(null)}
+              onClick={onClose}
               className="px-4 py-2 text-xs font-semibold text-stone-600 hover:text-stone-900 rounded-xl"
             >
               Cancel
@@ -175,5 +182,22 @@ export const IntroductionModal: React.FC = () => {
         </form>
       </div>
     </div>
+  );
+};
+
+export const IntroductionModal: React.FC = () => {
+  const { introTargetUser, setIntroTargetUser, currentUser, sendIntroduction } = useApp();
+
+  if (!introTargetUser) return null;
+
+  return (
+    <IntroductionDialogContent
+      currentUser={currentUser}
+      targetUser={introTargetUser}
+      onClose={() => setIntroTargetUser(null)}
+      onSend={(toUserId, prompt, message, sharedInterest) => {
+        sendIntroduction(toUserId, prompt, message, sharedInterest);
+      }}
+    />
   );
 };

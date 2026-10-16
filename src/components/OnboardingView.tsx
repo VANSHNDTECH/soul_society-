@@ -1,15 +1,9 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
 import {
-  Sparkles,
   ArrowRight,
   ArrowLeft,
   Check,
-  User,
-  Heart,
-  Compass,
-  Sliders,
-  Shield,
   Zap,
 } from 'lucide-react';
 import {
@@ -616,6 +610,45 @@ export const OnboardingView: React.FC = () => {
                       onClick={() => setVisibility(opt.id as any)}
                       className={`w-full p-3 rounded-xl border text-left transition-all ${
                         visibility === opt.id
+                          ? 'border-teal-600 bg-teal-50/70 font-medium'
+                          : 'border-stone-200 text-stone-700'
+                      }`}
+                    >
+                      <span className="block font-bold text-xs text-stone-900">{opt.title}</span>
+                      <span className="block text-[11px] text-stone-500 mt-0.5">{opt.desc}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-stone-700 uppercase tracking-wide mb-2">
+                  Introduction Barrier Requirement
+                </label>
+                <div className="space-y-2">
+                  {[
+                    {
+                      id: 'shared_intention',
+                      title: 'Shared Intention Required (Recommended)',
+                      desc: 'People must share at least one mutual intention before sending an introduction.',
+                    },
+                    {
+                      id: 'high_match',
+                      title: 'High Compatibility Only (70%+ Match)',
+                      desc: 'Requires significant shared interests and matching communication energy.',
+                    },
+                    {
+                      id: 'any',
+                      title: 'Open to Any Introduction',
+                      desc: 'Any compatible member can craft a personalized introduction.',
+                    },
+                  ].map(opt => (
+                    <button
+                      key={opt.id}
+                      type="button"
+                      onClick={() => setIntroRequirement(opt.id as any)}
+                      className={`w-full p-3 rounded-xl border text-left transition-all ${
+                        introRequirement === opt.id
                           ? 'border-teal-600 bg-teal-50/70 font-medium'
                           : 'border-stone-200 text-stone-700'
                       }`}

@@ -15,7 +15,6 @@ import {
   GraduationCap,
   PauseCircle,
   RotateCcw,
-  Sparkles,
   Users,
   Search,
   BookOpen,
