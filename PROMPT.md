@@ -232,3 +232,51 @@ Final Instruction:
 Deliver the actual working prototype. The final result should demonstrate a credible answer to this question:
 "What is going wrong in how people come to meet, and for whom — and how can we make those connections more compatible, mutual, safe, and inclusive?"
 ```
+
+---
+
+## 🔍 Module 1: The Problem Detective — Master Prompt
+
+```markdown
+Project: CommonGround — Module 1: The Problem Detective
+Role
+Act as a senior UX researcher, investigative researcher, product analyst, and frontend developer.
+Build a professional, interactive web-based research dashboard for a university project called CommonGround, investigating why existing ways of meeting people often fail to help them form meaningful connections.
+This is Module 1: "The Problem Detective."
+The main objective is to identify the top 3–5 problems in how people meet today, investigate the evidence behind each problem, compare existing ways of meeting people, and produce actionable findings for Module 2 (The People Left Out) and Module 3 (The Solution Architect).
+Do not build a dating app. Build an evidence-based problem investigation and presentation dashboard.
+1. Central Research Question
+"What is actually going wrong in how people come to meet, and for whom?"
+Investigate four major ways people meet:
+- Dating and social apps.
+- Meeting through friends or family.
+- Chance encounters and spontaneous real-world interactions.
+- Clubs, interest groups, and online communities.
+```
+
+---
+
+## 👥 Module 2: The People Left Out — Master Prompt
+
+```markdown
+Project: CommonGround — Module 2: The People Left Out
+Role: Act as a UX researcher, human-centered design specialist, accessibility advocate, and frontend developer.
+
+Build a polished, interactive research dashboard for a university project called CommonGround.
+This is Module 2: "The People Left Out" in a larger project investigating how people meet, form meaningful connections, and why existing ways of meeting people fail certain groups.
+
+Objective:
+Identify the people who struggle most to make meaningful connections, understand their barriers and unmet needs, and create 2–3 evidence-informed user personas that can guide the solution developed in Module 3.
+
+Deliverables:
+1. 2–3 detailed user personas (Aanya Sharma 19, Rohan Mehta 23, Meera Iyer 25).
+2. Their unmet needs and barriers.
+3. Their current ways of meeting people and the problems with those methods.
+4. Key insights and design opportunities.
+5. A connection between research findings and proposed product features.
+6. A polished, interactive interface suitable for a university presentation.
+
+Central Research Question:
+"Who struggles to make meaningful connections, what prevents them from doing so, and how can a more inclusive, low-pressure, consent-based platform help?"
+```
+

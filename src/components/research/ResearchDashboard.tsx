@@ -14,10 +14,12 @@ import { Sparkles, ArrowRight, ShieldCheck, BookOpen, GraduationCap } from 'luci
 
 interface ResearchDashboardProps {
   onSwitchToPrototype: () => void;
+  onSwitchToModule2?: () => void;
 }
 
 export const ResearchDashboard: React.FC<ResearchDashboardProps> = ({
   onSwitchToPrototype,
+  onSwitchToModule2,
 }) => {
   const [activeTab, setActiveTab] = useState<ResearchTab>('overview');
   const [selectedProblemId, setSelectedProblemId] = useState<string>(TOP_PROBLEMS[0].id);
@@ -34,6 +36,7 @@ export const ResearchDashboard: React.FC<ResearchDashboardProps> = ({
         activeTab={activeTab}
         setActiveTab={setActiveTab}
         onSwitchToPrototype={onSwitchToPrototype}
+        onSwitchToModule2={onSwitchToModule2}
       />
 
       {/* Main Research Content View */}

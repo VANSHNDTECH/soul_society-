@@ -15,9 +15,15 @@ import { ActiveTab } from '../types';
 
 interface NavbarProps {
   onSwitchToResearch?: () => void;
+  onSwitchToModule1?: () => void;
+  onSwitchToModule2?: () => void;
 }
 
-export const Navbar: React.FC<NavbarProps> = ({ onSwitchToResearch }) => {
+export const Navbar: React.FC<NavbarProps> = ({
+  onSwitchToResearch,
+  onSwitchToModule1,
+  onSwitchToModule2,
+}) => {
   const {
     activeTab,
     setActiveTab,
@@ -125,16 +131,27 @@ export const Navbar: React.FC<NavbarProps> = ({ onSwitchToResearch }) => {
             })}
           </nav>
 
-          {/* Right Controls: Module 1 Switcher, Presentation, Profile */}
-          <div className="flex items-center gap-2 sm:gap-3">
-            {onSwitchToResearch && (
+          {/* Right Controls: Module Switchers, Presentation, Profile */}
+          <div className="flex items-center gap-2 sm:gap-2.5">
+            {(onSwitchToModule1 || onSwitchToResearch) && (
               <button
-                onClick={onSwitchToResearch}
-                className="flex items-center gap-1.5 bg-stone-900 hover:bg-stone-800 text-teal-300 border border-stone-700 text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors shadow-2xs"
-                title="Switch back to Module 1: The Problem Detective Research Dashboard"
+                onClick={onSwitchToModule1 || onSwitchToResearch}
+                className="flex items-center gap-1.5 bg-stone-900 hover:bg-stone-800 text-teal-300 border border-stone-700 text-xs font-semibold px-2.5 py-1.5 rounded-lg transition-colors shadow-2xs"
+                title="Switch to Module 1: The Problem Detective Research Dashboard"
               >
-                <Compass className="w-4 h-4 text-teal-400" />
-                <span className="hidden sm:inline">Module 1 Research</span>
+                <Compass className="w-3.5 h-3.5 text-teal-400" />
+                <span className="hidden sm:inline">Module 1</span>
+              </button>
+            )}
+
+            {onSwitchToModule2 && (
+              <button
+                onClick={onSwitchToModule2}
+                className="flex items-center gap-1.5 bg-purple-50 hover:bg-purple-100 text-purple-900 border border-purple-200 text-xs font-semibold px-2.5 py-1.5 rounded-lg transition-colors shadow-2xs"
+                title="Switch to Module 2: The People Left Out (Personas & Barriers)"
+              >
+                <Users className="w-3.5 h-3.5 text-purple-700" />
+                <span className="hidden sm:inline">Module 2 Personas</span>
               </button>
             )}
 

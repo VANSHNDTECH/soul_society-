@@ -12,18 +12,21 @@ import {
   Sparkles,
   Sliders,
   CheckCircle,
+  Users,
 } from 'lucide-react';
 
 interface ResearchNavbarProps {
   activeTab: ResearchTab;
   setActiveTab: (tab: ResearchTab) => void;
   onSwitchToPrototype: () => void;
+  onSwitchToModule2?: () => void;
 }
 
 export const ResearchNavbar: React.FC<ResearchNavbarProps> = ({
   activeTab,
   setActiveTab,
   onSwitchToPrototype,
+  onSwitchToModule2,
 }) => {
   const tabs: { id: ResearchTab; label: string; icon: React.ReactNode; badge?: string }[] = [
     { id: 'overview', label: 'Overview', icon: <Search className="w-4 h-4" /> },
@@ -63,15 +66,25 @@ export const ResearchNavbar: React.FC<ResearchNavbarProps> = ({
             </button>
           </div>
 
-          {/* Right Action: Switch to Module 3 Solution Prototype */}
-          <div className="flex items-center gap-3">
+          {/* Right Action: Switch to Module 2 or Module 3 */}
+          <div className="flex items-center gap-2">
+            {onSwitchToModule2 && (
+              <button
+                onClick={onSwitchToModule2}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-purple-50 hover:bg-purple-100 text-purple-900 border border-purple-200 text-xs font-semibold shadow-2xs transition-all"
+                title="Open Module 2: The People Left Out (Personas & Barriers)"
+              >
+                <Users className="w-3.5 h-3.5 text-purple-700" />
+                <span className="hidden sm:inline">Module 2 Personas</span>
+              </button>
+            )}
             <button
               onClick={onSwitchToPrototype}
               className="flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-stone-900 hover:bg-teal-700 text-white text-xs font-semibold shadow-xs transition-all group"
               title="Launch Module 3: CommonGround Interactive App Prototype"
             >
               <Sparkles className="w-3.5 h-3.5 text-teal-300" />
-              <span>Launch Module 3 Prototype</span>
+              <span className="hidden sm:inline">Module 3 Prototype</span>
               <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
             </button>
           </div>

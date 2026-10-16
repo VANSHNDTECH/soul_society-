@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { AppProvider, useApp } from './context/AppContext';
 import { ResearchDashboard } from './components/research/ResearchDashboard';
+import { Module2Dashboard } from './components/module2/Module2Dashboard';
+import { Module2Tab } from './types/module2';
 import { Navbar } from './components/Navbar';
 import { Toast } from './components/Toast';
 import { LandingPage } from './components/LandingPage';
@@ -14,17 +16,34 @@ import { IntroductionModal } from './components/IntroductionModal';
 import { WhyMatchModal } from './components/WhyMatchModal';
 import { ReportModal } from './components/ReportModal';
 import { AcademicPresentationModal } from './components/AcademicPresentationModal';
-import { Sparkles, Shield, HeartHandshake, GraduationCap, Compass } from 'lucide-react';
+import {
+  Sparkles,
+  Shield,
+  HeartHandshake,
+  GraduationCap,
+  Compass,
+  Users,
+} from 'lucide-react';
 
-const PrototypeMainContent: React.FC<{ onSwitchToResearch: () => void }> = ({
-  onSwitchToResearch,
+interface PrototypeMainContentProps {
+  onSwitchToModule1: () => void;
+  onSwitchToModule2: () => void;
+}
+
+const PrototypeMainContent: React.FC<PrototypeMainContentProps> = ({
+  onSwitchToModule1,
+  onSwitchToModule2,
 }) => {
   const { activeTab, setActiveTab, setShowPresentationModal } = useApp();
 
   return (
-    <div className="min-h-screen flex flex-col justify-between bg-[#FAF9F5] text-stone-800">
+    <div className="min-h-screen flex flex-col justify-between bg-[#FAF9F5] text-stone-800 font-sans">
       {/* Navigation */}
-      <Navbar onSwitchToResearch={onSwitchToResearch} />
+      <Navbar
+        onSwitchToModule1={onSwitchToModule1}
+        onSwitchToModule2={onSwitchToModule2}
+        onSwitchToResearch={onSwitchToModule1}
+      />
 
       {/* Screen Views */}
       <main className="flex-1">
@@ -64,11 +83,19 @@ const PrototypeMainContent: React.FC<{ onSwitchToResearch: () => void }> = ({
 
             <div className="flex flex-wrap items-center gap-3">
               <button
-                onClick={onSwitchToResearch}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-teal-700 hover:bg-teal-600 text-white text-xs font-bold transition-colors"
+                onClick={onSwitchToModule1}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-stone-800 hover:bg-stone-700 text-stone-200 text-xs font-semibold transition-colors border border-stone-700"
               >
-                <Compass className="w-4 h-4 text-teal-200" />
-                <span>Open Module 1 Research Dashboard</span>
+                <Compass className="w-4 h-4 text-teal-300" />
+                <span>Module 1: Problems</span>
+              </button>
+
+              <button
+                onClick={onSwitchToModule2}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-purple-900/80 hover:bg-purple-800 text-purple-200 text-xs font-semibold transition-colors border border-purple-700/60"
+              >
+                <Users className="w-4 h-4 text-purple-300" />
+                <span>Module 2: Personas</span>
               </button>
 
               <button
@@ -104,17 +131,34 @@ const PrototypeMainContent: React.FC<{ onSwitchToResearch: () => void }> = ({
 };
 
 export default function App() {
-  const [appMode, setAppMode] = useState<'module1_research' | 'module3_prototype'>('module1_research');
+  const [appMode, setAppMode] = useState<'module1' | 'module2' | 'module3'>('module2');
+  const [module2Tab, setModule2Tab] = useState<Module2Tab>('overview');
+  const [selectedPersonaId, setSelectedPersonaId] = useState<string>('persona-aanya');
 
   return (
     <AppProvider>
-      {appMode === 'module1_research' ? (
-        <ResearchDashboard
-          onSwitchToPrototype={() => setAppMode('module3_prototype')}
+      {appMode === 'module2' && (
+        <Module2Dashboard
+          activeTab={module2Tab}
+          setActiveTab={setModule2Tab}
+          selectedPersonaId={selectedPersonaId}
+          setSelectedPersonaId={setSelectedPersonaId}
+          onSwitchToModule1={() => setAppMode('module1')}
+          onSwitchToModule3={() => setAppMode('module3')}
         />
-      ) : (
+      )}
+
+      {appMode === 'module1' && (
+        <ResearchDashboard
+          onSwitchToPrototype={() => setAppMode('module3')}
+          onSwitchToModule2={() => setAppMode('module2')}
+        />
+      )}
+
+      {appMode === 'module3' && (
         <PrototypeMainContent
-          onSwitchToResearch={() => setAppMode('module1_research')}
+          onSwitchToModule1={() => setAppMode('module1')}
+          onSwitchToModule2={() => setAppMode('module2')}
         />
       )}
     </AppProvider>
