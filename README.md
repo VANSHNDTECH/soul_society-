@@ -156,11 +156,17 @@ npm run dev
 http://127.0.0.1:5173/
 ```
 
-### Navigating the 3 Modules
-- **Default View:** Opens directly into **Module 2: The People Left Out** (Persona Dashboard).
-- Use the **sub-tabs** (*Overview, User Personas, Connection Barriers, Current Solutions, Design Opportunities, Methodology & Guide*) to explore each research artifact.
-- Click **"Module 1: Problems"** in the top navigation to view the empirical Problem Detective investigation.
-- Click **"Launch Module 3 Prototype"** to experience the interactive CommonGround application prototype.
+### Unified Global Navigation
+- **One Shared Header:** The top navigation bar persistently displays all three modules across the entire application:
+  1. **Module 1 — The Problem Detective** (`/module-1`): *Research & Evidence*
+  2. **Module 2 — The People Left Out** (`/module-2`): *Personas & User Needs*
+  3. **Module 3 — The Solution Architect** (`/module-3`): *Prototype & Solution*
+- **Scoped Contextual Sub-Navigation:** Directly below the global navigation, each module displays its specific sections without duplicate headers or conflicting switcher buttons:
+  - *Module 1:* Overview, Top 5 Problems, Meeting Methods, Prioritization, Evidence Library, To Solutions, Research Gaps, References.
+  - *Module 2:* Overview, User Personas, Connection Barriers, Current Solutions, Design Opportunities, Methodology & Validation Guide.
+  - *Module 3:* Discover, Introductions, Active Connections, Safety Center.
+- **Direct Deep Linking & Refresh:** Built on `react-router-dom` with full browser history support (Back/Forward navigation, bookmarking `/module-1`, `/module-2`, `/module-3`, and refreshing without page loss).
+- **Global Project Defense:** The academic presentation modal is globally accessible from any module via the **"Project Defense"** header button.
 
 ---
 

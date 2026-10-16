@@ -10,24 +10,69 @@ import { FromProblemsToSolutions } from './FromProblemsToSolutions';
 import { ResearchGapsAndInterviews } from './ResearchGapsAndInterviews';
 import { ReferencesList } from './ReferencesList';
 import { TOP_PROBLEMS } from '../../data/researchData';
-import { Sparkles, ArrowRight, ShieldCheck, BookOpen, GraduationCap } from 'lucide-react';
+import { Sparkles, BookOpen } from 'lucide-react';
 
 interface ResearchDashboardProps {
-  onSwitchToPrototype: () => void;
+  activeTab?: ResearchTab;
+  setActiveTab?: (tab: ResearchTab) => void;
+  onSwitchToPrototype?: () => void;
   onSwitchToModule2?: () => void;
+  standalone?: boolean;
 }
 
 export const ResearchDashboard: React.FC<ResearchDashboardProps> = ({
+  activeTab: externalTab,
+  setActiveTab: externalSetTab,
   onSwitchToPrototype,
   onSwitchToModule2,
+  standalone = false,
 }) => {
-  const [activeTab, setActiveTab] = useState<ResearchTab>('overview');
+  const [internalTab, setInternalTab] = useState<ResearchTab>('overview');
   const [selectedProblemId, setSelectedProblemId] = useState<string>(TOP_PROBLEMS[0].id);
+
+  const activeTab = externalTab ?? internalTab;
+  const setActiveTab = externalSetTab ?? setInternalTab;
 
   const handleSelectProblem = (id: string) => {
     setSelectedProblemId(id);
     setActiveTab('problems');
   };
+
+  const content = (
+    <div className="w-full">
+      {activeTab === 'overview' && (
+        <ResearchOverview
+          onNavigateTab={setActiveTab}
+          onSelectProblem={handleSelectProblem}
+        />
+      )}
+
+      {activeTab === 'problems' && (
+        <ProblemExplorer
+          selectedProblemId={selectedProblemId}
+          onSelectProblem={setSelectedProblemId}
+        />
+      )}
+
+      {activeTab === 'methods' && <MeetingMethodsComparison />}
+
+      {activeTab === 'prioritization' && <PrioritizationMatrix />}
+
+      {activeTab === 'evidence' && <EvidenceExplorer />}
+
+      {activeTab === 'bridge' && (
+        <FromProblemsToSolutions onSwitchToPrototype={onSwitchToPrototype || (() => {})} />
+      )}
+
+      {activeTab === 'gaps' && <ResearchGapsAndInterviews />}
+
+      {activeTab === 'references' && <ReferencesList />}
+    </div>
+  );
+
+  if (!standalone) {
+    return content;
+  }
 
   return (
     <div className="min-h-screen flex flex-col justify-between bg-[#FAF9F5] text-stone-800">
@@ -35,39 +80,13 @@ export const ResearchDashboard: React.FC<ResearchDashboardProps> = ({
       <ResearchNavbar
         activeTab={activeTab}
         setActiveTab={setActiveTab}
-        onSwitchToPrototype={onSwitchToPrototype}
+        onSwitchToPrototype={onSwitchToPrototype || (() => {})}
         onSwitchToModule2={onSwitchToModule2}
       />
 
       {/* Main Research Content View */}
       <main className="flex-1 pb-16">
-        {activeTab === 'overview' && (
-          <ResearchOverview
-            onNavigateTab={setActiveTab}
-            onSelectProblem={handleSelectProblem}
-          />
-        )}
-
-        {activeTab === 'problems' && (
-          <ProblemExplorer
-            selectedProblemId={selectedProblemId}
-            onSelectProblem={setSelectedProblemId}
-          />
-        )}
-
-        {activeTab === 'methods' && <MeetingMethodsComparison />}
-
-        {activeTab === 'prioritization' && <PrioritizationMatrix />}
-
-        {activeTab === 'evidence' && <EvidenceExplorer />}
-
-        {activeTab === 'bridge' && (
-          <FromProblemsToSolutions onSwitchToPrototype={onSwitchToPrototype} />
-        )}
-
-        {activeTab === 'gaps' && <ResearchGapsAndInterviews />}
-
-        {activeTab === 'references' && <ReferencesList />}
+        {content}
       </main>
 
       {/* Research Intelligence Footer */}
@@ -89,13 +108,15 @@ export const ResearchDashboard: React.FC<ResearchDashboardProps> = ({
             </div>
 
             <div className="flex flex-wrap items-center gap-3">
-              <button
-                onClick={onSwitchToPrototype}
-                className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-teal-600 hover:bg-teal-500 text-stone-950 text-xs font-bold transition-colors"
-              >
-                <Sparkles className="w-3.5 h-3.5" />
-                <span>Launch Module 3 Solution Prototype</span>
-              </button>
+              {onSwitchToPrototype && (
+                <button
+                  onClick={onSwitchToPrototype}
+                  className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-teal-600 hover:bg-teal-500 text-stone-950 text-xs font-bold transition-colors"
+                >
+                  <Sparkles className="w-3.5 h-3.5" />
+                  <span>Launch Module 3 Solution Prototype</span>
+                </button>
+              )}
 
               <button
                 onClick={() => setActiveTab('references')}

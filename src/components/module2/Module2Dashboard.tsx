@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Module2Tab } from '../../types/module2';
 import { Module2Navbar } from './Module2Navbar';
 import { Module2Overview } from './Module2Overview';
@@ -13,75 +13,90 @@ import {
   Sparkles,
   ShieldAlert,
   ArrowRight,
-  BookOpen,
   HeartHandshake,
 } from 'lucide-react';
 
 interface Module2DashboardProps {
-  activeTab: Module2Tab;
-  setActiveTab: (tab: Module2Tab) => void;
-  selectedPersonaId: string;
-  setSelectedPersonaId: (id: string) => void;
-  onSwitchToModule1: () => void;
-  onSwitchToModule3: () => void;
+  activeTab?: Module2Tab;
+  setActiveTab?: (tab: Module2Tab) => void;
+  selectedPersonaId?: string;
+  setSelectedPersonaId?: (id: string) => void;
+  onSwitchToModule1?: () => void;
+  onSwitchToModule3?: () => void;
+  standalone?: boolean;
 }
 
 export const Module2Dashboard: React.FC<Module2DashboardProps> = ({
-  activeTab,
-  setActiveTab,
-  selectedPersonaId,
-  setSelectedPersonaId,
+  activeTab: externalTab,
+  setActiveTab: externalSetTab,
+  selectedPersonaId: externalPersonaId,
+  setSelectedPersonaId: externalSetPersonaId,
   onSwitchToModule1,
   onSwitchToModule3,
+  standalone = false,
 }) => {
+  const [internalTab, setInternalTab] = useState<Module2Tab>('overview');
+  const [internalPersonaId, setInternalPersonaId] = useState<string>('persona-aanya');
+
+  const activeTab = externalTab ?? internalTab;
+  const setActiveTab = externalSetTab ?? setInternalTab;
+  const selectedPersonaId = externalPersonaId ?? internalPersonaId;
+  const setSelectedPersonaId = externalSetPersonaId ?? setInternalPersonaId;
+
+  const content = (
+    <div className="w-full">
+      {activeTab === 'overview' && (
+        <Module2Overview
+          onNavigateTab={setActiveTab}
+          onSelectPersona={(id) => {
+            setSelectedPersonaId(id);
+            setActiveTab('personas');
+          }}
+        />
+      )}
+
+      {activeTab === 'personas' && (
+        <PersonaExplorer
+          selectedPersonaId={selectedPersonaId}
+          onSelectPersona={setSelectedPersonaId}
+        />
+      )}
+
+      {activeTab === 'barriers' && <BarriersSection />}
+
+      {activeTab === 'solutions' && <CurrentSolutionsSection />}
+
+      {activeTab === 'opportunities' && (
+        <DesignOpportunitiesSection
+          onSwitchToModule3={onSwitchToModule3 || (() => {})}
+        />
+      )}
+
+      {activeTab === 'methodology' && (
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 text-left">
+          <MethodologySection />
+        </div>
+      )}
+    </div>
+  );
+
+  if (!standalone) {
+    return content;
+  }
+
   return (
     <div className="min-h-screen bg-[#FAF9F5] text-stone-900 flex flex-col font-sans selection:bg-purple-200 selection:text-purple-900">
       {/* Module 2 Navigation Header */}
       <Module2Navbar
         activeTab={activeTab}
         setActiveTab={setActiveTab}
-        onSwitchToModule1={onSwitchToModule1}
-        onSwitchToModule3={onSwitchToModule3}
+        onSwitchToModule1={onSwitchToModule1 || (() => {})}
+        onSwitchToModule3={onSwitchToModule3 || (() => {})}
       />
 
       {/* Main Content Area */}
       <main className="flex-1 pb-16">
-        {activeTab === 'overview' && (
-          <Module2Overview
-            onNavigateTab={setActiveTab}
-            onSelectPersona={(id) => {
-              setSelectedPersonaId(id);
-              setActiveTab('personas');
-            }}
-          />
-        )}
-
-        {activeTab === 'personas' && (
-          <PersonaExplorer
-            selectedPersonaId={selectedPersonaId}
-            onSelectPersona={setSelectedPersonaId}
-          />
-        )}
-
-        {activeTab === 'barriers' && (
-          <BarriersSection />
-        )}
-
-        {activeTab === 'solutions' && (
-          <CurrentSolutionsSection />
-        )}
-
-        {activeTab === 'opportunities' && (
-          <DesignOpportunitiesSection
-            onSwitchToModule3={onSwitchToModule3}
-          />
-        )}
-
-        {activeTab === 'methodology' && (
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 text-left">
-            <MethodologySection />
-          </div>
-        )}
+        {content}
       </main>
 
       {/* Module 2 Research Footer */}
@@ -198,26 +213,30 @@ export const Module2Dashboard: React.FC<Module2DashboardProps> = ({
                 Explore the complete research and prototyping sequence:
               </p>
               <div className="space-y-2">
-                <button
-                  onClick={onSwitchToModule1}
-                  className="w-full flex items-center justify-between px-3 py-2 rounded-xl bg-stone-700/70 hover:bg-stone-700 text-stone-200 text-xs font-medium transition-colors"
-                >
-                  <span className="flex items-center gap-1.5">
-                    <Search className="w-3.5 h-3.5 text-teal-400" />
-                    Module 1: The Problem Detective
-                  </span>
-                  <ArrowRight className="w-3 h-3 text-stone-400" />
-                </button>
-                <button
-                  onClick={onSwitchToModule3}
-                  className="w-full flex items-center justify-between px-3 py-2 rounded-xl bg-teal-800/80 hover:bg-teal-700 text-white text-xs font-medium transition-colors"
-                >
-                  <span className="flex items-center gap-1.5">
-                    <Sparkles className="w-3.5 h-3.5 text-teal-300" />
-                    Module 3: CommonGround Prototype
-                  </span>
-                  <ArrowRight className="w-3 h-3 text-teal-300" />
-                </button>
+                {onSwitchToModule1 && (
+                  <button
+                    onClick={onSwitchToModule1}
+                    className="w-full flex items-center justify-between px-3 py-2 rounded-xl bg-stone-700/70 hover:bg-stone-700 text-stone-200 text-xs font-medium transition-colors"
+                  >
+                    <span className="flex items-center gap-1.5">
+                      <Search className="w-3.5 h-3.5 text-teal-400" />
+                      Module 1: The Problem Detective
+                    </span>
+                    <ArrowRight className="w-3 h-3 text-stone-400" />
+                  </button>
+                )}
+                {onSwitchToModule3 && (
+                  <button
+                    onClick={onSwitchToModule3}
+                    className="w-full flex items-center justify-between px-3 py-2 rounded-xl bg-teal-800/80 hover:bg-teal-700 text-white text-xs font-medium transition-colors"
+                  >
+                    <span className="flex items-center gap-1.5">
+                      <Sparkles className="w-3.5 h-3.5 text-teal-300" />
+                      Module 3: CommonGround Prototype
+                    </span>
+                    <ArrowRight className="w-3 h-3 text-teal-300" />
+                  </button>
+                )}
               </div>
             </div>
           </div>
